@@ -4,8 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-// Create the 'uploads' and 'uploads/profile-pictures' directory if they don't exist
-const uploadDir = 'uploads';
+// Create 'uploads' and 'uploads/profile-pictures' directory if they don't exist
+const uploadDir = 'uploads/profile-pictures';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -14,17 +14,17 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Specify the folder where uploaded files should be stored
-    cb(null, uploadDir);  // Store images in 'uploads/profile-pictures'
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     // Make each file's name unique by appending the current timestamp
-    cb(null, Date.now() + path.extname(file.originalname));  // Original file extension
+    cb(null, Date.now() + path.extname(file.originalname)); // Original file extension
   }
 });
 
 // File filter to allow only image uploads
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;  // Allowed file types (image formats)
+  const allowedTypes = /jpeg|jpg|png|gif/;  // Allowed image file types
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 
@@ -44,8 +44,8 @@ router.post('/upload-profile', upload.single('profilePic'), (req, res) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  // Construct the file URL (assuming files are publicly accessible)
-  const fileUrl = `https://i-pet-server.onrender.com/uploads${req.file.filename}`;
+  // Construct the file URL assuming the server is publicly accessible
+  const fileUrl = `https://your-domain.com/uploads/profile-pictures/${req.file.filename}`;
 
   // Respond with the URL of the uploaded file
   res.status(200).json({
