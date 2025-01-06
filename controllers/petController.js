@@ -1,18 +1,16 @@
-const PetProfile = require('../models/PetProfile'); // Mongoose model for PetProfile
+const PetProfile = require('../models/PetProfile');
 
-// Create Pet Profile
 exports.createPetProfile = async (req, res) => {
   try {
-    const { petName, petType,petPictures, petAge, petBreed, petDescription } = req.body;
+    const { petName, petType, petPictures, petAge, petBreed, petDescription } = req.body;
 
-    // Validate required fields
-    if (!petName || !petType || !petAge) {
-      return res.status(400).json({ message: 'Pet name, type, and age are required' });
+    // Validate petPictures URLs
+    if (!Array.isArray(petPictures) || petPictures.some(pic => !isValidURL(pic))) {
+      return res.status(400).json({ message: 'Invalid pet picture URL' });
     }
 
-    // Create a new pet profile
     const newPetProfile = new PetProfile({
-      ownerId: req.user.id, // Extracted from the JWT middleware
+      user: req.user.id, // Extracted from the JWT middleware
       petName,
       petType,
       petPictures,
@@ -21,7 +19,6 @@ exports.createPetProfile = async (req, res) => {
       petDescription,
     });
 
-    // Save to the database
     await newPetProfile.save();
 
     res.status(201).json({
@@ -29,7 +26,15 @@ exports.createPetProfile = async (req, res) => {
       petProfile: newPetProfile,
     });
   } catch (error) {
-    console.error('Error creating pet profile:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error creating pet profile:', error);
+    res.status(500).json({ 
+      message: 'An error occurred while creating the pet profile', 
+      error: error.message 
+    });
   }
+};
+
+const isValidURL = (url) => {
+  const regex = /^(ftp|http|https):\/\/[^ "]+$/;
+  return regex.test(url);
 };
