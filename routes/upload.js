@@ -45,7 +45,7 @@ router.post('/upload-profile', upload.single('profilePic'), (req, res) => {
   }
 
   // Construct the file URL (assuming files are publicly accessible)
-  const fileUrl = `https://i-pet-server.onrender.com/uploads/profile-pictures/${req.file.filename}`;
+  const fileUrl = `https://i-pet-server.onrender.com/uploads${req.file.filename}`;
 
   // Respond with the URL of the uploaded file
   res.status(200).json({
