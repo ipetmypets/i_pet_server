@@ -40,7 +40,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter });
 
 // POST route to handle profile picture upload
-router.post('/upload-profile', upload.single('profile_pic'), (req, res) => {
+router.post('/upload-profile', upload.single('profile_pic'), (req, res) => { // Use 'profile_pic' here
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
@@ -51,7 +51,7 @@ router.post('/upload-profile', upload.single('profile_pic'), (req, res) => {
   // Respond with the URL of the uploaded file
   res.status(200).json({
     message: 'Profile picture uploaded successfully!',
-    fileUrl: fileUrl
+    profilePic: fileUrl // Send the updated URL back
   });
 });
 
