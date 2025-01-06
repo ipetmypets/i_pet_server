@@ -3,7 +3,7 @@ const PetProfile = require('../models/PetProfile'); // Mongoose model for PetPro
 // Create Pet Profile
 exports.createPetProfile = async (req, res) => {
   try {
-    const { petName, petType, petAge, petBreed, petDescription } = req.body;
+    const { petName, petType,petPictures, petAge, petBreed, petDescription } = req.body;
 
     // Validate required fields
     if (!petName || !petType || !petAge) {
@@ -15,6 +15,7 @@ exports.createPetProfile = async (req, res) => {
       ownerId: req.user.id, // Extracted from the JWT middleware
       petName,
       petType,
+      petPictures,
       petAge,
       petBreed,
       petDescription,
