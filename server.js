@@ -26,7 +26,7 @@ app.use('/user', userRoutes);
 app.use('/pet', petRoutes);
 app.use('/message', messageRoutes);
 app.use('/match', matchRoutes);
-app.use('/uploads', upload);  // Use the new upload routes
+app.use('/upload', upload);  // Use the upload routes
 
 app.get('/api', (req, res) => {
     res.json({ message: "Welcome to the iPetMyPets API!" });
