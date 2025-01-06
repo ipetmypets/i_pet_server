@@ -1,24 +1,39 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // User model
+const express = require('express');
+const router = express.Router();
+const PetProfile = require('../models/PetProfile'); // Mongoose model for PetProfile
+const { authMiddleware } = require('../middleware/auth'); // Middleware for verifying JWT
 
-exports.authMiddleware = async (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1]; // Bearer <token>
-
-  if (!token) {
-    return res.status(401).json({ message: 'Authorization token required' });
-  }
-
+// Create Pet Profile
+router.post('/create', authMiddleware, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace with your secret
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid token' });
+    const { petName, petType, petAge, petBreed, petDescription } = req.body;
+
+    // Validate required fields
+    if (!petName || !petType || !petAge) {
+      return res.status(400).json({ message: 'Pet name, type, and age are required' });
     }
 
-    req.user = user; // Attach user data to the request object
-    next();
-  } catch (err) {
-    console.error('Authentication error:', err.message);
-    res.status(401).json({ message: 'Unauthorized' });
+    // Create new pet profile
+    const newPetProfile = new PetProfile({
+      ownerId: req.user.id, // Extracted from the JWT middleware
+      petName,
+      petType,
+      petAge,
+      petBreed,
+      petDescription,
+    });
+
+    // Save to database
+    await newPetProfile.save();
+
+    res.status(201).json({
+      message: 'Pet profile created successfully',
+      petProfile: newPetProfile,
+    });
+  } catch (error) {
+    console.error('Error creating pet profile:', error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
-};
+});
+
+module.exports = router;
