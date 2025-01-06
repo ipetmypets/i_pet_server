@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 exports.register = async (req, res) => {
-  const { username, email, password, longitude, latitude } = req.body;
+  const { username, email,profile_pic, password, longitude, latitude } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -15,6 +15,7 @@ exports.register = async (req, res) => {
     const newUser = new User({
       username,
       email,
+      profile_pic,
       password: hashedPassword,
       Location: { longitude, latitude },  // Ensure this is an object with both fields
     });
