@@ -8,6 +8,7 @@ const userRoutes = require('./routes/user');
 const petRoutes = require('./routes/pet');
 const messageRoutes = require('./routes/message');
 const matchRoutes = require('./routes/match');
+const upload = require('./routes/upload');  // Import upload route
 
 dotenv.config();
 const app = express();
@@ -25,9 +26,11 @@ app.use('/user', userRoutes);
 app.use('/pet', petRoutes);
 app.use('/message', messageRoutes);
 app.use('/match', matchRoutes);
+app.use('/upload', upload);  // Use the new upload routes
+
 app.get('/api', (req, res) => {
     res.json({ message: "Welcome to the iPetMyPets API!" });
-  });
+});
 
 // Start server
 const PORT = process.env.PORT || 5002;
