@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const PetProfile = require('../models/PetProfile'); // Mongoose model for PetProfile
-const { authMiddleware } = require('../middleware/auth'); // Middleware for verifying JWT
+const { authMiddleware } = require('../middleware/authMiddleware'); // Middleware for verifying JWT
 
 // Create Pet Profile
 router.post('/create', authMiddleware, async (req, res) => {
