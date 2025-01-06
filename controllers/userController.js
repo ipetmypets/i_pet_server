@@ -10,10 +10,10 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Respond with the user profile data (username, email, location, etc.)
     res.json({
       username: user.username,
       email: user.email,
+      profile_pic: user.profile_pic,
       location: user.Location,  // Include location data
     });
   } catch (err) {
