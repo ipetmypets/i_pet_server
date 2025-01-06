@@ -22,29 +22,37 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+// Update user profile
 const updateUserProfile = async (req, res) => {
-  const { username, email, profile_pic } = req.body;
-
   try {
-    const user = await User.findById(req.user.id); // Assuming `req.user.id` is set by `checkAuth`
+    const userId = req.user.id; // Get user ID from the authenticated request
+
+    // Find the user by ID
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update user fields
-    if (username) user.username = username;
-    if (email) user.email = email;
-    if (profile_pic) user.profile_pic = profile_pic;
+    // Update user fields if provided
+    if (req.body.username) user.username = req.body.username;
+    if (req.body.email) user.email = req.body.email;
+    if (req.file) user.profile_pic = req.file.path; // Save Cloudinary URL
 
-    await user.save(); // Save the updated user document
+    // Save the updated user
+    const updatedUser = await user.save();
 
-    res.status(200).json({
-      message: 'User profile updated successfully',
-      user,
+    res.json({
+      message: 'Profile updated successfully!',
+      user: {
+        username: updatedUser.username,
+        email: updatedUser.email,
+        profile_pic: updatedUser.profile_pic,
+      },
     });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

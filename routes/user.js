@@ -1,15 +1,16 @@
 const express = require('express');
-const router = express.Router();
-const {
-  getUserProfile,
-  updateUserProfile, // Import the update function from the controller
-} = require('../controllers/userController');
+const multer = require('multer');
+const { storage } = require('../config/cloudinary'); // Import Cloudinary storage configuration
+const { getUserProfile, updateUserProfile } = require('../controllers/userController');
 const { checkAuth } = require('../middleware/authMiddleware');
 
-// Route to get user profile
+const router = express.Router();
+const upload = multer({ storage }); // Multer middleware for handling uploads
+
+// Get user profile
 router.get('/profile', checkAuth, getUserProfile);
 
-// Route to update user profile
-router.put('/update', checkAuth, updateUserProfile);
+// Update user profile, including profile picture
+router.put('/profile', checkAuth, upload.single('profile_pic'), updateUserProfile);
 
 module.exports = router;
