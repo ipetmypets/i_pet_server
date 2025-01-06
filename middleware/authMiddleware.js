@@ -11,7 +11,7 @@ const checkAuth = (req, res, next) => {
     req.user = decoded; // Attach user data to the request object
     next(); // Move to the next middleware or route handler
   } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
+    res.status(401).json({ message: 'Invalid token',decoded });
 
   }
 };
