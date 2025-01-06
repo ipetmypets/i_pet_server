@@ -24,6 +24,7 @@ const storage = multer.diskStorage({
 
 // File filter to allow only image uploads
 const fileFilter = (req, file, cb) => {
+  console.log('Uploaded file details:', file);
   const allowedTypes = /jpeg|jpg|png|gif/;  // Allowed file types (image formats)
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
