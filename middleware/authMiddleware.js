@@ -12,6 +12,7 @@ const checkAuth = (req, res, next) => {
     next(); // Move to the next middleware or route handler
   } catch (err) {
     res.status(401).json({ message: 'Invalid token' });
+
   }
 };
 
