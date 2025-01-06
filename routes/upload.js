@@ -1,49 +1,58 @@
+const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const router = express.Router();
 
-// Multer storage configuration
+// Create the 'uploads' folder if it doesn't exist
+const uploadDir = 'uploads/profile-pictures';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Set up multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);  // Store images in 'uploads'
+    // Specify the folder where uploaded files should be stored
+    cb(null, uploadDir);  // Store images in 'uploads/profile-pictures'
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));  // Make the filename unique
-  },
+    // Make each file's name unique by appending the current timestamp
+    cb(null, Date.now() + path.extname(file.originalname));  // Original file extension
+  }
 });
 
-// File filter to only allow image files
+// File filter to allow only image uploads
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
+  console.log('Uploaded file details:', file);
+  const allowedTypes = /jpeg|jpg|png|gif/;  // Allowed file types (image formats)
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 
   if (extname && mimetype) {
-    return cb(null, true);
+    return cb(null, true);  // Accept file
   } else {
-    cb(new Error('Only image files are allowed'), false);
+    cb(new Error('Only image files are allowed'));
   }
 };
 
 // Initialize multer with storage and file filter
 const upload = multer({ storage, fileFilter });
 
-// POST route to handle the profile picture upload
-router.post('/upload-profile', upload.single('profilePic'), (req, res) => {
+// POST route to handle profile picture upload
+router.post('/upload-profile', upload.single('profile_pic'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  // Construct the URL for the uploaded file
-  const fileUrl = `https://i-pet-server.onrender.com/uploads/${req.file.filename}`;
+  // Construct the file URL (assuming files are publicly accessible)
+  const fileUrl = `https://i-pet-server.onrender.com/uploads/profile-pictures/${req.file.filename}`;
 
-  // Send the file URL in the response
+  // Respond with the URL of the uploaded file
   res.status(200).json({
     message: 'Profile picture uploaded successfully!',
-    profile_pic: fileUrl,
+    fileUrl: fileUrl
   });
 });
+
+module.exports = router;
