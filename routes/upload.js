@@ -7,7 +7,7 @@ const router = express.Router();
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Specify the folder where uploaded files should be stored
-    cb(null, 'uploads/profile-pictures');  // Temporary storage on Render (ephemeral)
+    cb(null, 'uploads');  // Temporary storage on Render (ephemeral)
   },
   filename: (req, file, cb) => {
     // Make each file's name unique by appending the current timestamp
