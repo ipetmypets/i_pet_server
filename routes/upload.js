@@ -1,13 +1,20 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const router = express.Router();
+
+// Create the 'uploads' and 'uploads/profile-pictures' directory if they don't exist
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Specify the folder where uploaded files should be stored
-    cb(null, 'uploads');  // Temporary storage on Render (ephemeral)
+    cb(null, uploadDir);  // Store images in 'uploads/profile-pictures'
   },
   filename: (req, file, cb) => {
     // Make each file's name unique by appending the current timestamp
@@ -37,9 +44,9 @@ router.post('/upload-profile', upload.single('profilePic'), (req, res) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  // Construct the file URL
+  // Construct the file URL (assuming files are publicly accessible)
   const fileUrl = `https://i-pet-server.onrender.com/uploads/profile-pictures/${req.file.filename}`;
-  
+
   // Respond with the URL of the uploaded file
   res.status(200).json({
     message: 'Profile picture uploaded successfully!',
