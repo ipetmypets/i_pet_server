@@ -1,10 +1,7 @@
-const express = require('express');
-const router = express.Router();
 const PetProfile = require('../models/PetProfile'); // Mongoose model for PetProfile
-const { authMiddleware } = require('../middleware/authMiddleware'); // Middleware for verifying JWT
 
 // Create Pet Profile
-router.post('/create', authMiddleware, async (req, res) => {
+exports.createPetProfile = async (req, res) => {
   try {
     const { petName, petType, petAge, petBreed, petDescription } = req.body;
 
@@ -13,7 +10,7 @@ router.post('/create', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Pet name, type, and age are required' });
     }
 
-    // Create new pet profile
+    // Create a new pet profile
     const newPetProfile = new PetProfile({
       ownerId: req.user.id, // Extracted from the JWT middleware
       petName,
@@ -23,7 +20,7 @@ router.post('/create', authMiddleware, async (req, res) => {
       petDescription,
     });
 
-    // Save to database
+    // Save to the database
     await newPetProfile.save();
 
     res.status(201).json({
@@ -34,6 +31,4 @@ router.post('/create', authMiddleware, async (req, res) => {
     console.error('Error creating pet profile:', error.message);
     res.status(500).json({ message: 'Internal Server Error' });
   }
-});
-
-module.exports = router;
+};
