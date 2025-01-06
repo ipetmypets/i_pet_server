@@ -25,18 +25,11 @@ const getUserProfile = async (req, res) => {
 // Update user profile
 const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // Get user ID from the authenticated request
-
-    // Find the user by ID
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select('-password');  // Exclude password from profile
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // Update user fields if provided
-    if (req.body.username) user.username = req.body.username;
-    if (req.body.email) user.email = req.body.email;
     if (req.file) user.profile_pic = req.file.path; // Save Cloudinary URL
 
     // Save the updated user
@@ -45,8 +38,6 @@ const updateUserProfile = async (req, res) => {
     res.json({
       message: 'Profile updated successfully!',
       user: {
-        username: updatedUser.username,
-        email: updatedUser.email,
         profile_pic: updatedUser.profile_pic,
       },
     });
