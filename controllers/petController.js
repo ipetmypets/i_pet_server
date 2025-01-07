@@ -33,3 +33,18 @@ exports.createPetProfile = async (req, res) => {
     });
   }
 };
+exports.getPetProfiles = async (req, res) => {
+  try {
+    const petProfiles = await PetProfile.find({ user: req.user.id });
+    res.status(200).json({
+      success: true,
+      petProfiles,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch pet profiles',
+      error: error.message,
+    });
+  }
+};
