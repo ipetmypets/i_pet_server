@@ -35,7 +35,9 @@ exports.createPetProfile = async (req, res) => {
 };
 exports.getPetProfiles = async (req, res) => {
   try {
-    const petProfiles = await PetProfile.find({ user: req.user.id });
+    // Fetch all pet profiles without filtering by user ID
+    const petProfiles = await PetProfile.find();
+    
     res.status(200).json({
       success: true,
       petProfiles,
