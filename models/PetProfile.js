@@ -4,7 +4,7 @@ const petProfileSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   petName: { type: String, required: true },
   petType: { type: String, required: true },
-  petPictures: { type: [String], required: true },
+  petPictures: { type: String, required: true },
   petAge: { type: Number, required: true },
   petBreed: { type: String, required: true },
   petDescription: { type: String },
