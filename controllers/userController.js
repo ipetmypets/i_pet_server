@@ -30,7 +30,6 @@ const getUserProfile = async (req, res) => {
 // Controller for uploading a user's profile image
 const uploadUserImage = async (req, res) => {
   try {
-    // Check if a file was uploaded
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -38,7 +37,6 @@ const uploadUserImage = async (req, res) => {
     const form = new FormData();
     const imagePath = req.file.path;
     form.append('image', fs.createReadStream(imagePath)); // Add file as stream
-  
     form.append('key', IMGBB_API_KEY);
 
     const response = await axios.post('https://api.imgbb.com/1/upload', form, {
@@ -50,11 +48,8 @@ const uploadUserImage = async (req, res) => {
     fs.unlinkSync(req.file.path);
 
     if (response.data && response.data.status === 200) {
-      // Save the image URL to the user's record in the database
       const imageUrl = response.data.data.url;
-      // Assuming you have a User model and user ID is in req.userId
-      // Update the user in the database
-      await User.findByIdAndUpdate(req.userId, { profileImage: imageUrl });
+      await User.findByIdAndUpdate(req.userId, { profile_pic: imageUrl });
 
       return res.json({
         success: true,
