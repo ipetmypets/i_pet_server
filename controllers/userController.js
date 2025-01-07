@@ -4,8 +4,6 @@ const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
 const IMGBUR_CLIENT_ID = '755588a3e569d6a';
-//const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
-//const IMG_ALBUM_ID = 'profile_photo';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -34,27 +32,26 @@ const uploadUserImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
     const form = new FormData();
     const imagePath = req.file.path;
     form.append('image', fs.createReadStream(imagePath)); // Add the image to the form
+    form.append('type', 'file');  // Tell Imgur this is a file upload
+    form.append('privacy', 'hidden'); // Make the image hidden
+
     const headers = {
       'Authorization': `Client-ID ${IMGBUR_CLIENT_ID}`,
       ...form.getHeaders(),
     };
 
-    // Upload image to Imgur API
     const response = await axios.post('https://api.imgur.com/3/image', form, { headers });
 
-    fs.unlinkSync(req.file.path); // Remove the uploaded file from the server after uploading
+    fs.unlinkSync(req.file.path);
 
     if (response.data && response.data.success) {
-      const imageUrl = response.data.data.link; // Get the uploaded image URL from the response
-
-      const updatedUser = await User.findByIdAndUpdate(
-        req.user.id, 
-        { profile_pic: imageUrl },  // Store the image URL in the user model
-        { new: true }
-      );
+      const imageUrl = response.data.data.link; // Get the uploaded image URL
+      const userId = req.user.id; // Assuming the user is authenticated and `req.user` is available
+      const updatedUser = await User.findByIdAndUpdate(userId, { profile_pic: imageUrl }, { new: true });
 
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
@@ -62,15 +59,15 @@ const uploadUserImage = async (req, res) => {
 
       return res.json({
         success: true,
-        message: 'Image uploaded and profile updated successfully',
-        imageUrl: updatedUser.profile_pic, // The URL of the uploaded profile picture
+        message: 'Profile image uploaded successfully',
+        imageUrl: updatedUser.profile_pic,
       });
     } else {
-      throw new Error('Failed to upload image');
+      throw new Error('Failed to upload image to Imgur');
     }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Server error: ' + error.message });
+    console.error('Error uploading image:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 };
 
