@@ -4,10 +4,9 @@ exports.createPetProfile = async (req, res) => {
   try {
     const { petName, petType, petPictures, petAge, petBreed, petDescription } = req.body;
 
-    if (!isValidURL(petPictures)) {
+    if (!petPictures || petPictures.trim() === '') {
       console.log('Pet Picture URL:', petPictures);
-      return res.status(400).json({ message: 'Invalid image URL provided.' });
-      
+      return res.status(400).json({ message: 'Pet picture is required.' });
     }
 
     const newPetProfile = new PetProfile({
@@ -35,7 +34,3 @@ exports.createPetProfile = async (req, res) => {
   }
 };
 
-const isValidURL = (url) => {
-  const regex = /^(ftp|http|https):\/\/[^ "]+$/;
-  return regex.test(url);
-};
