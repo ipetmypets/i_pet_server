@@ -1,4 +1,5 @@
 const axios = require('axios');
+const fs = require('fs');
 const User = require('../models/User');  // Assuming you have a User model
 
 const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
@@ -43,7 +44,6 @@ const uploadUserImage = async (req, res) => {
         image: imageFile,
       },
     });
-
     // Clean up the temporary file
     fs.unlinkSync(req.file.path);
 
