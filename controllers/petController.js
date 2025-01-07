@@ -16,7 +16,7 @@ exports.createPetProfile = async (req, res) => {
 
     await newPetProfile.save();
 
-    res.status(201).json({
+    res.status(200).json({
       message: 'Pet profile created successfully',
       petProfile: newPetProfile,
     });
@@ -28,8 +28,4 @@ exports.createPetProfile = async (req, res) => {
     });
   }
 };
-
-const isValidURL = (url) => {
-  const regex = /^(ftp|http|https):\/\/[^ "]+$/;
-  return regex.test(url);
-};
+module.exports = { createPetProfile };
