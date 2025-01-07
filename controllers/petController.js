@@ -4,6 +4,10 @@ exports.createPetProfile = async (req, res) => {
   try {
     const { petName, petType, petPictures, petAge, petBreed, petDescription } = req.body;
 
+    if (!isValidURL(petPictures)) {
+      return res.status(400).json({ message: 'Invalid image URL provided.' });
+    }
+
     const newPetProfile = new PetProfile({
       user: req.user.id, // Extracted from the JWT middleware
       petName,
