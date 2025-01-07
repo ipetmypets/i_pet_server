@@ -4,7 +4,7 @@ const { getUserProfile, uploadUserImage } = require('../controllers/userControll
 const { checkAuth } = require('../middleware/authMiddleware');
 
 const router = express.Router();
-const upload = multer({ storage }); // Multer middleware for handling uploads
+const upload = multer({ dest: 'uploads/' }); // Multer middleware for handling uploads
 
 // Get user profile
 router.get('/profile', checkAuth, getUserProfile);
