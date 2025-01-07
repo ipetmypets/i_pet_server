@@ -36,25 +36,34 @@ const uploadUserImage = async (req, res) => {
 
     const form = new FormData();
     const imagePath = req.file.path;
-    form.append('image', fs.createReadStream(imagePath)); // Add file as stream
+    form.append('image', fs.createReadStream(imagePath)); 
     form.append('key', IMGBB_API_KEY);
 
     const response = await axios.post('https://api.imgbb.com/1/upload', form, {
       headers: {
-        ...form.getHeaders(), // Ensure correct headers for multipart form
+        ...form.getHeaders(), 
       },
     });
-    // Clean up the temporary file
+
     fs.unlinkSync(req.file.path);
 
     if (response.data && response.data.status === 200) {
       const imageUrl = response.data.data.url;
-      await User.findByIdAndUpdate(req.userId, { profile_pic: imageUrl });
+
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.id, 
+        { profile_pic: imageUrl },
+        { new: true } 
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
 
       return res.json({
         success: true,
-        message: 'Image uploaded successfully',
-        imageUrl,
+        message: 'Image uploaded and profile updated successfully',
+        imageUrl: updatedUser.profile_pic, 
       });
     } else {
       throw new Error('Failed to upload image');
