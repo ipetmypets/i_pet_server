@@ -5,7 +5,7 @@ exports.createPetProfile = async (req, res) => {
 
   let petPictureUrl = petPictures;
   if (!petPictureUrl || petPictureUrl === '') {
-    petPictureUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgDFp3dmPTGj1xOEuSlAt-ilTfBOmYfth5hQ&s'; 
+    petPictureUrl = 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png'; 
   }
 
   const newPetProfile = new PetProfile({
