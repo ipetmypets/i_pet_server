@@ -3,8 +3,9 @@ const fs = require('fs');
 const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
-const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
-const IMG_ALBUM_ID = 'profile_photo';
+const IMGBUR_CLIENT_ID = '755588a3e569d6a';
+//const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
+//const IMG_ALBUM_ID = 'profile_photo';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -28,35 +29,31 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Controller for uploading a user's profile image
 const uploadUserImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-
     const form = new FormData();
     const imagePath = req.file.path;
-    form.append('image', fs.createReadStream(imagePath));
-    form.append('key', IMGBB_API_KEY); // Your ImgBB API key
-    form.append('album', IMG_ALBUM_ID); // Specify the album ID where the image should be uploaded
+    form.append('image', fs.createReadStream(imagePath)); // Add the image to the form
+    const headers = {
+      'Authorization': `Client-ID ${IMGBUR_CLIENT_ID}`,
+      ...form.getHeaders(),
+    };
 
-    const response = await axios.post('https://api.imgbb.com/1/upload', form, {
-      headers: {
-        ...form.getHeaders(),
-      },
-    });
+    // Upload image to Imgur API
+    const response = await axios.post('https://api.imgur.com/3/image', form, { headers });
 
-    fs.unlinkSync(req.file.path); // Remove the uploaded file from server
+    fs.unlinkSync(req.file.path); // Remove the uploaded file from the server after uploading
 
-    if (response.data && response.data.status === 200) {
-      const imageUrl = response.data.data.url; // URL of the uploaded image
+    if (response.data && response.data.success) {
+      const imageUrl = response.data.data.link; // Get the uploaded image URL from the response
 
-      // Update user profile with the new image URL
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id, 
-        { profile_pic: imageUrl },
-        { new: true } 
+        { profile_pic: imageUrl },  // Store the image URL in the user model
+        { new: true }
       );
 
       if (!updatedUser) {
@@ -76,7 +73,6 @@ const uploadUserImage = async (req, res) => {
     return res.status(500).json({ error: 'Server error: ' + error.message });
   }
 };
-
 
 module.exports = {
   getUserProfile,
