@@ -1,4 +1,7 @@
+const axios = require('axios');
 const User = require('../models/User');  // Assuming you have a User model
+
+const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -22,36 +25,51 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Update user profile
-const updateUserProfile = async (req, res) => {
+// Controller for uploading a user's profile image
+const uploadUserImage = async (req, res) => {
   try {
-    const userId = req.user.id; // Get user ID from the authenticated request
-
-    // Find the user by ID
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    if (req.file) user.profile_pic = req.file.path; // Save Cloudinary URL
+    // Read the uploaded file and convert it to Base64
+    const imageFile = fs.readFileSync(req.file.path, { encoding: 'base64' });
 
-    // Save the updated user
-    const updatedUser = await user.save();
-
-    res.json({
-      message: 'Profile updated successfully!',
-      user: {
-        profile_pic: updatedUser.profile_pic,
+    // Send the image to ImgBB
+    const response = await axios.post('https://api.imgbb.com/1/upload', null, {
+      params: {
+        key: IMGBB_API_KEY,
+        image: imageFile,
       },
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+
+    // Clean up the temporary file
+    fs.unlinkSync(req.file.path);
+
+    if (response.data && response.data.status === 200) {
+      // Save the image URL to the user's record in the database
+      const imageUrl = response.data.data.url;
+      // Assuming you have a User model and user ID is in req.userId
+      // Update the user in the database
+      await User.findByIdAndUpdate(req.userId, { profileImage: imageUrl });
+
+      return res.json({
+        success: true,
+        message: 'Image uploaded successfully',
+        imageUrl,
+      });
+    } else {
+      throw new Error('Failed to upload image');
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Server error: ' + error.message });
   }
 };
 
+
 module.exports = {
   getUserProfile,
-  updateUserProfile,
+  uploadUserImage
 };
