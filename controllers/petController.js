@@ -5,7 +5,9 @@ exports.createPetProfile = async (req, res) => {
     const { petName, petType, petPictures, petAge, petBreed, petDescription } = req.body;
 
     if (!isValidURL(petPictures)) {
+      console.log('Pet Picture URL:', petPictures);s
       return res.status(400).json({ message: 'Invalid image URL provided.' });
+      
     }
 
     const newPetProfile = new PetProfile({
