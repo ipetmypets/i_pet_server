@@ -4,11 +4,6 @@ exports.createPetProfile = async (req, res) => {
   try {
     const { petName, petType, petPictures, petAge, petBreed, petDescription } = req.body;
 
-    // Validate petPictures URLs
-    if (!Array.isArray(petPictures) || petPictures.some(pic => !isValidURL(pic))) {
-      return res.status(400).json({ message: 'Invalid pet picture URL' });
-    }
-
     const newPetProfile = new PetProfile({
       user: req.user.id, // Extracted from the JWT middleware
       petName,
