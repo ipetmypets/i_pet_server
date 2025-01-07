@@ -4,6 +4,7 @@ const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
 const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
+const IMG_ALBUM_ID = 'profile_photo';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -36,20 +37,22 @@ const uploadUserImage = async (req, res) => {
 
     const form = new FormData();
     const imagePath = req.file.path;
-    form.append('image', fs.createReadStream(imagePath)); 
-    form.append('key', IMGBB_API_KEY);
+    form.append('image', fs.createReadStream(imagePath));
+    form.append('key', IMGBB_API_KEY); // Your ImgBB API key
+    form.append('album', IMG_ALBUM_ID); // Specify the album ID where the image should be uploaded
 
     const response = await axios.post('https://api.imgbb.com/1/upload', form, {
       headers: {
-        ...form.getHeaders(), 
+        ...form.getHeaders(),
       },
     });
 
-    fs.unlinkSync(req.file.path);
+    fs.unlinkSync(req.file.path); // Remove the uploaded file from server
 
     if (response.data && response.data.status === 200) {
-      const imageUrl = response.data.data.url;
+      const imageUrl = response.data.data.url; // URL of the uploaded image
 
+      // Update user profile with the new image URL
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id, 
         { profile_pic: imageUrl },
@@ -63,7 +66,7 @@ const uploadUserImage = async (req, res) => {
       return res.json({
         success: true,
         message: 'Image uploaded and profile updated successfully',
-        imageUrl: updatedUser.profile_pic, 
+        imageUrl: updatedUser.profile_pic, // The URL of the uploaded profile picture
       });
     } else {
       throw new Error('Failed to upload image');
