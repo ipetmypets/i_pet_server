@@ -3,11 +3,8 @@ const PetProfile = require('../models/PetProfile');
 exports.createPetProfile = async (req, res) => {
   try {
     const { petName, petType, petPictures, petAge, petBreed, petDescription } = req.body;
-
-    if (!petPictures || petPictures.trim() === '') {
-      console.log('Pet Picture URL:', petPictures);
-      return res.status(400).json({ message: 'Pet picture is required.' });
-    }
+    
+    console.log('Pet Picture URL:', petPictures);
 
     const newPetProfile = new PetProfile({
       user: req.user.id, // Extracted from the JWT middleware
