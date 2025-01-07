@@ -28,4 +28,3 @@ exports.createPetProfile = async (req, res) => {
     });
   }
 };
-module.exports = { createPetProfile };
