@@ -1,5 +1,6 @@
 const axios = require('axios');
 const fs = require('fs');
+const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
 const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
@@ -34,14 +35,15 @@ const uploadUserImage = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Read the uploaded file and convert it to Base64
-    const imageFile = fs.readFileSync(req.file.path, { encoding: 'base64' });
+    const form = new FormData();
+    const imagePath = req.file.path;
+    form.append('image', fs.createReadStream(imagePath)); // Add file as stream
+  
+    form.append('key', IMGBB_API_KEY);
 
-    // Send the image to ImgBB
-    const response = await axios.post('https://api.imgbb.com/1/upload', null, {
-      params: {
-        key: IMGBB_API_KEY,
-        image: imageFile,
+    const response = await axios.post('https://api.imgbb.com/1/upload', form, {
+      headers: {
+        ...form.getHeaders(), // Ensure correct headers for multipart form
       },
     });
     // Clean up the temporary file
