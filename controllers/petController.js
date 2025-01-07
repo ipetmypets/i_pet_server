@@ -21,11 +21,13 @@ exports.createPetProfile = async (req, res) => {
   try {
     await newPetProfile.save();
     res.status(201).json({
+      success: true,
       message: 'Pet profile created successfully',
       petProfile: newPetProfile,
     });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: 'Failed to create pet profile',
       error: error.message,
     });
