@@ -29,30 +29,25 @@ const getUserProfile = async (req, res) => {
 };
 const getOwnerProfile = async (req, res) => {
   try {
-    // Fetch all users except the current logged-in user
-    const users = await User.find({
-      user: { $ne: req.user.id }  
-    });
+   
+    const userId = req.params.userId; 
+    const user = await User.findById(userId).select('username profile_pic Location'); 
 
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'No users found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-
-    const userProfiles = users.map(user => ({
-      username: user.username,
-      profile_pic: user.profile_pic,
-      location: user.Location,  // Assuming Location is an object with lat/long
-    }));
 
     res.status(200).json({
       success: true,
-      users: userProfiles,  // Return the list of user profiles
+      username: user.username,
+      profile_pic: user.profile_pic,
+      location: user.Location,
     });
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch user profiles',
-      error: error.message,
+      message: 'Server error: ' + err.message,
     });
   }
 };
