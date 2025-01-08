@@ -27,28 +27,36 @@ const getUserProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-const getOwnerProfile= async (req, res) => {
+const getOwnerProfile = async (req, res) => {
   try {
-    const user = await User.find({
+    // Fetch all users except the current logged-in user
+    const users = await User.find({
       user: { $ne: req.user.id }  
     });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
     }
-    res.status(200).json({
-      success: true,
+
+    const userProfiles = users.map(user => ({
       username: user.username,
       profile_pic: user.profile_pic,
-      location: user.Location,  // Return the list of pet profiles
+      location: user.Location,  // Assuming Location is an object with lat/long
+    }));
+
+    res.status(200).json({
+      success: true,
+      users: userProfiles,  // Return the list of user profiles
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch pet profiles',
+      message: 'Failed to fetch user profiles',
       error: error.message,
     });
   }
 };
+
 
 const uploadUserImage = async (req, res) => {
   try {
