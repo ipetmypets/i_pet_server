@@ -31,24 +31,18 @@ const uploadUserImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
-      
     }
-    const albumId = "CkBgpke";
-    if (!albumId) {
-      return res.status(400).json({ error: 'Album ID is required' });
-    }
-
     const form = new FormData();
     const imagePath = req.file.path;
     form.append('image', fs.createReadStream(imagePath));
-    form.append('album', albumId);
-
     const headers = {
       'Authorization': `Client-ID ${IMGBUR_CLIENT_ID}`,
       ...form.getHeaders(),
     };
 
+    // Upload image to Imgur API
     const response = await axios.post('https://api.imgur.com/3/image', form, { headers });
+
     fs.unlinkSync(req.file.path);
 
     if (response.data && response.data.success) {
