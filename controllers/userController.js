@@ -4,6 +4,7 @@ const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
+const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -35,23 +36,20 @@ const uploadUserImage = async (req, res) => {
 
     const form = new FormData();
     const imagePath = req.file.path;
-    form.append('file', fs.createReadStream(imagePath));  // Make sure the field name is 'file'
-    form.append('api_key', API_KEY); // Add your ImgHippo API Key
+    form.append('file', fs.createReadStream(imagePath));  // Ensure the field name is correct
+    form.append('api_key', API_KEY); // Add ImgHippo API Key
 
     const headers = {
-      'Authorization': `Bearer ${API_KEY}`, // If ImgHippo requires API key in authorization header
+      'Authorization': `Bearer ${API_KEY}`, // Correct Authorization header
       ...form.getHeaders(),
     };
 
-  
-    const response = await axios.post('https://api.imghippo.com/v1/upload', form, { headers });
-    console.log('Response from ImgHippo:', response.data);
+    const response = await axios.post(IMGHI_URL, form, { headers });
 
-    fs.unlinkSync(req.file.path);
+    if (response.data.success && response.data.data.url) {
+      const imageUrl = response.data.data.url;
 
-    if (response.data && response.data.url) {
-      const imageUrl = response.data.url;  // Get the uploaded image URL from the response
-
+      // Update the user with the new profile image URL
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
         { profile_pic: imageUrl },
@@ -62,19 +60,21 @@ const uploadUserImage = async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
 
+      // Return the updated user profile picture URL
       return res.json({
         success: true,
         message: 'Image uploaded and profile updated successfully',
-        imageUrl: updatedUser.profile_pic, // The URL of the uploaded profile picture
+        imageUrl: updatedUser.profile_pic,
       });
     } else {
       throw new Error('Failed to upload image');
     }
   } catch (error) {
-    console.error(error);
+    console.error('Error during image upload:', error); // Log the error for debugging
     return res.status(500).json({ error: 'Server error: ' + error.message });
   }
 };
+
 
 
 module.exports = {
