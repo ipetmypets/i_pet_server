@@ -4,6 +4,7 @@ const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
+const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -39,12 +40,12 @@ const uploadUserImage = async (req, res) => {
     form.append('api_key', API_KEY); // Add your ImgHippo API Key
 
     const headers = {
-      'Authorization': `Bearer API_KEY`, // If ImgHippo requires API key in authorization header
+      'Authorization': `Bearer ${API_KEY}`, // If ImgHippo requires API key in authorization header
       ...form.getHeaders(),
     };
 
     // Upload image to ImgHippo API
-    const response = await axios.post('https://api.imghippo.com/v1/upload', form, { headers });
+    const response = await axios.post(IMGHI_URL, form, { headers });
 
     fs.unlinkSync(req.file.path);
 
