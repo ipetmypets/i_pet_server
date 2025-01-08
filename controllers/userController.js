@@ -33,7 +33,7 @@ const uploadUserImage = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
       
     }
-    const albumId = req.body.albumId;
+    const albumId = "CkBgpke";
     if (!albumId) {
       return res.status(400).json({ error: 'Album ID is required' });
     }
