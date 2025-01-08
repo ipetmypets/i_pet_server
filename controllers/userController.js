@@ -4,7 +4,6 @@ const FormData = require('form-data');
 const User = require('../models/User');  // Assuming you have a User model
 
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
-const IMGHI_API_URL = 'https://api.imghippo.com/v1/upload';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -45,7 +44,7 @@ const uploadUserImage = async (req, res) => {
     };
 
     // Upload image to ImgHippo API
-    const response = await axios.post(IMGHI_API_URL, form, { headers });
+    const response = await axios.post('https://api.imghippo.com/v1/upload', form, { headers });
 
     fs.unlinkSync(req.file.path);
 
