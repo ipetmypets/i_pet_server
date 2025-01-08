@@ -16,6 +16,7 @@ exports.createPetProfile = async (req, res) => {
     petAge,
     petBreed,
     petDescription,
+    isActive: true,
   });
 
   try {
