@@ -30,13 +30,19 @@ const getUserProfile = async (req, res) => {
 const getOwnerProfile = async (req, res) => {
   try {
    
-    const userId = req.params.userId; 
-    const user = await User.findById(userId).select('username profile_pic Location'); 
+    const userId = req.params.userId; // Get userId from URL parameter
 
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid userId format' });
+    }
+
+    // Find user by _id
+    const user = await User.findById(userId).select('username profile_pic Location'); // Fetch specific fields (username, profile_pic, Location)
+
+    // If user is not found
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     res.status(200).json({
       success: true,
       username: user.username,
