@@ -8,7 +8,7 @@ const upload = multer({ dest: 'uploads/' }); // Multer middleware for handling u
 
 // Get user profile
 router.get('/profile', checkAuth, getUserProfile);
-router.get('/owner', checkAuth, getOwnerProfile);
+router.get('/:userId', checkAuth, getOwnerProfile);
 
 // Update user profile, including profile picture
 router.put('/upload-image', checkAuth, upload.single('profileImage'), uploadUserImage);
