@@ -14,7 +14,6 @@ const uploadToGitHub = async (filePath, fileName) => {
   try {
     const fileContent = fs.readFileSync(filePath); // Read the file content
 
-    // Create the GitHub API URL to upload the file
     const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${IMAGE_FOLDER_PATH}${fileName}`;
 
     // GitHub API payload to upload the file
