@@ -36,12 +36,14 @@ exports.createPetProfile = async (req, res) => {
 };
 exports.getPetProfiles = async (req, res) => {
   try {
-    // Fetch all pet profiles without filtering by user ID
-    const petProfiles = await PetProfile.find();
-    
+    const petProfiles = await PetProfile.find({
+      isActive: true,              // Only active pet profiles
+      user: { $ne: req.user.id }   // Exclude the logged-in user's pet profiles
+    });
+
     res.status(200).json({
       success: true,
-      petProfiles,
+      petProfiles,  // Return the list of pet profiles
     });
   } catch (error) {
     res.status(500).json({
