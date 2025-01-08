@@ -1,46 +1,11 @@
 const axios = require('axios');
 const fs = require('fs');
-const path = require('path');
-const User = require('../models/User'); // Assuming you have a User model
+const FormData = require('form-data');
+const User = require('../models/User');  // Assuming you have a User model
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // GitHub personal access token
-const GITHUB_USERNAME = process.env.GITHUB_USERNAME; // Your GitHub username
-const GITHUB_REPO = process.env.GITHUB_REPO; // Your GitHub repository name
-const GITHUB_BRANCH = 'main'; // Branch you want to upload to
-const IMAGE_FOLDER_PATH = 'images/'; // Folder where you want to store the image
-
-// Function to upload file to GitHub using GitHub API
-const uploadToGitHub = async (filePath, fileName) => {
-  try {
-    const fileContent = fs.readFileSync(filePath); // Read the file content
-
-    const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${IMAGE_FOLDER_PATH}${fileName}`;
-
-    // GitHub API payload to upload the file
-    const data = {
-      message: `Add profile picture ${fileName}`, // Commit message
-      content: fileContent.toString('base64'), // Convert the file content to base64
-    };
-
-    const headers = {
-      'Authorization': `Bearer ${GITHUB_TOKEN}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.put(url, data, { headers });
-
-    if (response.status === 201) {
-      const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/${GITHUB_BRANCH}/${IMAGE_FOLDER_PATH}${fileName}`;
-      console.log('File uploaded successfully!', fileUrl);
-      return fileUrl; // Return the raw URL of the image
-    } else {
-      throw new Error('Failed to upload the image to GitHub');
-    }
-  } catch (error) {
-    console.error('Error uploading file to GitHub:', error);
-    throw new Error('File upload failed');
-  }
-};
+const IMGBUR_CLIENT_ID = '755588a3e569d6a';
+//const IMGBB_API_KEY = '5d863b76f3ea83add6aeec050f9493d5';
+//const IMG_ALBUM_ID = 'profile_photo';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -64,39 +29,51 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-// Upload user image and update profile with GitHub URL
 const uploadUserImage = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+    const form = new FormData();
+    const imagePath = req.file.path;
+    form.append('image', fs.createReadStream(imagePath)); // Add the image to the form
 
-    const filePath = req.file.path;  // Path to the uploaded file
-    const fileName = req.file.originalname;  // Original file name
+    // Set the authorization headers with the Imgur client ID
+    const headers = {
+      'Authorization': `Client-ID ${IMGBUR_CLIENT_ID}`,
+      ...form.getHeaders(),
+    };
 
-    // Step 1: Upload the file to GitHub and get the raw URL
-    const profilePicUrl = await uploadToGitHub(filePath, fileName);
+    // Upload image to Imgur API
+    const response = await axios.post('https://api.imgur.com/3/image', form, { headers });
 
-    // Step 2: Save the image URL to the user's profile
-    const userId = req.user.id; // Assuming the user is authenticated
+    fs.unlinkSync(req.file.path); // Remove the uploaded file from the server after uploading
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (response.data && response.data.success) {
+      const imageUrl = response.data.data.link; // Get the uploaded image URL from the response
+
+      // Update the user's profile with the new image URL
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.id, 
+        { profile_pic: imageUrl },  // Store the image URL in the user model
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Image uploaded and profile updated successfully',
+        imageUrl: updatedUser.profile_pic, // The URL of the uploaded profile picture
+      });
+    } else {
+      throw new Error('Failed to upload image');
     }
-
-    // Update the user's profile with the new image URL
-    user.profile_pic = profilePicUrl;
-    await user.save(); // Save the updated user profile
-
-    return res.json({
-      success: true,
-      message: 'Profile image uploaded successfully',
-      imageUrl: user.profile_pic, // Return the updated profile picture URL
-    });
   } catch (error) {
-    console.error('Error uploading image:', error);
-    res.status(500).json({ error: 'Server error: ' + error.message });
+    console.error(error);
+    return res.status(500).json({ error: 'Server error: ' + error.message });
   }
 };
 
