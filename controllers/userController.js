@@ -27,7 +27,6 @@ const uploadToGitHub = async (filePath, fileName) => {
       'Content-Type': 'application/json',
     };
 
-    // Make a PUT request to GitHub API to upload the image
     const response = await axios.put(url, data, { headers });
 
     if (response.status === 201) {
