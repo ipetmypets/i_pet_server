@@ -65,6 +65,8 @@ const uploadUserImage = async (req, res) => {
         await axios.delete(`https://api.imgur.com/3/image/${oldImageId}`, {
           headers: { Authorization: `Client-ID ${clientId}` },
         });
+      }else{
+        console.error('no old url');
       }
 
       user.profile_pic = imageUrl; // Store the new image URL
