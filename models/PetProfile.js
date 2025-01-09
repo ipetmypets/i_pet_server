@@ -8,7 +8,6 @@ const petProfileSchema = new mongoose.Schema({
   petAge: { type: Number, required: true },
   petBreed: { type: String, required: true },
   petDescription: { type: String },
-  isActive: { type: Boolean, default: true },
 });
 
 const PetProfile = mongoose.model('PetProfile', petProfileSchema);
