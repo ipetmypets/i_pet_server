@@ -37,7 +37,6 @@ exports.createPetProfile = async (req, res) => {
 exports.getPetProfiles = async (req, res) => {
   try {
     const petProfiles = await PetProfile.find({
-      isActive: true,              // Only active pet profiles
       user: { $ne: req.user.id }   // Exclude the logged-in user's pet profiles
     });
 
