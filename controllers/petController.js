@@ -36,17 +36,13 @@ exports.createPetProfile = async (req, res) => {
 };
 exports.getPetProfiles = async (req, res) => {
   try {
-    const onlyMyPets = req.query.onlyMyPets === 'true'; // Example: /api/pet-profiles?onlyMyPets=true
-
-    const filter = onlyMyPets
-      ? { user: req.user.id } // Fetch only the logged-in user's pet profiles
-      : { user: { $ne: req.user.id } }; // Exclude the logged-in user's pet profiles
-
-    const petProfiles = await PetProfile.find(filter);
+    const petProfiles = await PetProfile.find({
+      user: { $ne: req.user.id }   // Exclude the logged-in user's pet profiles
+    });
 
     res.status(200).json({
       success: true,
-      petProfiles,
+      petProfiles,  // Return the list of pet profiles
     });
   } catch (error) {
     res.status(500).json({
@@ -56,4 +52,3 @@ exports.getPetProfiles = async (req, res) => {
     });
   }
 };
-
