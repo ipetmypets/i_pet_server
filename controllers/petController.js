@@ -6,7 +6,7 @@ const PetProfile = require('../models/PetProfile');
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
-// Upload pet picture and create a profile
+// Upload pet picture and return the URL
 exports.uploadPetPicture = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -16,7 +16,6 @@ exports.uploadPetPicture = async (req, res) => {
   }
 
   console.log('Received file path:', req.file.path);
-  console.log('Received fields:', req.body); // Log all fields received from the client
 
   const form = new FormData();
   const imagePath = req.file.path;
@@ -34,8 +33,6 @@ exports.uploadPetPicture = async (req, res) => {
 
     // Check if the ImgHippo API response contains a valid URL
     const petPictureUrl = response.data.url;
-
-    console.log(peytPictureUrl);
     
     if (!petPictureUrl) {
       return res.status(500).json({
@@ -44,46 +41,63 @@ exports.uploadPetPicture = async (req, res) => {
       });
     }
 
-    // Extract pet details from request body
-    const { petName, petType, petAge, petBreed, petDescription } = req.body;
-
-    // Validate the required fields
-    if (!petName || !petType || !petAge || !petBreed || !petDescription) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required pet profile fields',
-      });
-    }
-
-    // Parse pet age as an integer
-    const parsedPetAge = parseInt(petAge, 10);
-    if (isNaN(parsedPetAge)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid value for petAge. It must be a number.',
-      });
-    }
-
-    // Check if the user already has 5 pet profiles
-    const profileCount = await PetProfile.countDocuments({ user: req.user.id });
-    if (profileCount >= 5) {
-      return res.status(400).json({
-        success: false,
-        message: 'You can only create up to 5 pet profiles',
-      });
-    }
-
-    // Create a new PetProfile object
-    const newPetProfile = new PetProfile({
-      user: req.user.id,
-      petName,
-      petType,
-      petPictures: petPictureUrl,  // Use the uploaded image URL
-      petAge: parsedPetAge,
-      petBreed,
-      petDescription,
+    // Return the URL
+    res.status(200).json({
+      success: true,
+      petPictureUrl,
     });
+  } catch (error) {
+    console.error('Error during image upload:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to upload image',
+      error: error.message,
+    });
+  }
+};
 
+// Create a new pet profile
+exports.createPetProfile = async (req, res) => {
+  const { petName, petType, petPictureUrl, petAge, petBreed, petDescription } = req.body;
+
+  // Validate the required fields
+  if (!petName || !petType || !petAge || !petBreed || !petDescription || !petPictureUrl) {
+    return res.status(400).json({
+      success: false,
+      message: 'Missing required pet profile fields',
+    });
+  }
+
+  // Parse pet age as an integer
+  const parsedPetAge = parseInt(petAge, 10);
+  if (isNaN(parsedPetAge)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid value for petAge. It must be a number.',
+    });
+  }
+
+  // Check if the user already has 5 pet profiles
+  const profileCount = await PetProfile.countDocuments({ user: req.user.id });
+  if (profileCount >= 5) {
+    return res.status(400).json({
+      success: false,
+      message: 'You can only create up to 5 pet profiles',
+    });
+  }
+
+  // Create a new PetProfile object
+  const newPetProfile = new PetProfile({
+    user: req.user.id,
+    petName,
+    petType,
+    petPictures: petPictureUrl,  // Use the provided image URL
+    petAge: parsedPetAge,
+    petBreed,
+    petDescription,
+  });
+
+  try {
     // Save the new pet profile to the database
     await newPetProfile.save();
 
@@ -92,13 +106,12 @@ exports.uploadPetPicture = async (req, res) => {
       success: true,
       message: 'Pet profile created successfully',
       petProfile: newPetProfile,
-      petPictureUrl,
     });
   } catch (error) {
-    console.error('Error during upload or profile creation:', error);
+    console.error('Error during profile creation:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to upload image or create pet profile',
+      message: 'Failed to create pet profile',
       error: error.message,
     });
   }
