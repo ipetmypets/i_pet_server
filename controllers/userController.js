@@ -11,7 +11,7 @@ const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId).select('-password');  // Exclude password from profile
+    const user = await User.findById(userId).select('-password'); 
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -80,7 +80,6 @@ const uploadUserImage = async (req, res) => {
     if (response.data.success && response.data.data.url) {
       const imageUrl = response.data.data.url;
 
-      // Update the user with the new profile image URL
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
         { profile_pic: imageUrl },
@@ -91,7 +90,6 @@ const uploadUserImage = async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      // Return the updated user profile picture URL
       return res.json({
         success: true,
         message: 'Image uploaded and profile updated successfully',
