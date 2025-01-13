@@ -21,14 +21,13 @@ exports.uploadPetPicture = async (req, res) => {
   form.append('api_key', API_KEY);
 
   try {
-    // Upload the image to ImgHippo API
+ 
     const response = await axios.post(IMGHI_URL, form, {
       headers: {
         ...form.getHeaders(),
       },
     });
-    console.log('Received file path:', response.data, response.data.url, response.data.data.url);
-    // Check if the ImgHippo API response contains a valid URL
+   
     const petPictureUrl = response.data.url || (response.data.data && response.data.data.url);
     
     if (!petPictureUrl) {
