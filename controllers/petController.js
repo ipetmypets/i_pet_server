@@ -58,7 +58,7 @@ exports.createPetProfile = async (req, res) => {
   } else {
     // Upload image to ImgHippo
     const form = new FormData();
-    form.append('file', fs.createReadStream(petPictureUrl));
+    form.append('petPicturePath', fs.createReadStream(petPicturePath));
     form.append('apiKey', API_KEY);
 
     try {
