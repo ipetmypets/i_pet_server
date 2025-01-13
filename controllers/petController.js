@@ -34,7 +34,7 @@ exports.uploadPetPicture = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to upload image',
+      message: 'Failed to upload image server',
       error: error.message,
     });
   }
