@@ -2,6 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const FormData = require('form-data');
 const PetProfile = require('../models/PetProfile');
+const e = require('express');
 
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
@@ -158,6 +159,7 @@ console.log(petProfile);
       message: 'Pet profile deleted successfully',
     });
   } catch (error) {
+    console.log(petProfile,req.user.id,error,'sssss');
     console.error('Error during profile deletion:', error);
     res.status(500).json({
       success: false,
