@@ -1,14 +1,12 @@
+const upload = multer({ dest: 'uploads/' });
+
 const express = require('express');
 const router = express.Router();
-const { createPetProfile, getPetProfiles, uploadPetPicture } = require('../controllers/petController');
+const { uploadPetPictureAndCreateProfile, getPetProfiles } = require('../controllers/petController');
 const { checkAuth } = require('../middleware/authMiddleware');
-const multer = require('multer');
 
-const upload = multer({ dest: 'uploads/' });
 // Multer setup for handling multipart form data
-
-router.post('/create', checkAuth, createPetProfile);
+router.post('/uploadPet', checkAuth, upload.single('petPicture'), uploadPetPictureAndCreateProfile);
 router.get('/profiles', checkAuth, getPetProfiles);
-router.post('/uploadPetPicture', checkAuth, upload.single('petPicture'), uploadPetPicture);
 
 module.exports = router;
