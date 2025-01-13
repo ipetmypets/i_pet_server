@@ -2,17 +2,17 @@ const axios = require('axios');
 const fs = require('fs');
 const FormData = require('form-data');
 const PetProfile = require('../models/PetProfile');
+const multer = require('multer');
 
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
+// Multer setup for handling multipart form data
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 exports.uploadPetPicture = async (req, res) => {
-  const { petPicturePath } = req.body;
-  
-
-  console.log(req.body);
-
-  if (!petPicturePath || petPicturePath === '') {
+  if (!req.file) {
     return res.status(400).json({
       success: false,
       message: 'No picture path provided',
@@ -20,7 +20,7 @@ exports.uploadPetPicture = async (req, res) => {
   }
 
   const form = new FormData();
-  form.append('petPicturePath', fs.createReadStream(petPicturePath));
+  form.append('file', req.file.buffer, req.file.originalname);
   form.append('apiKey', API_KEY);
 
   try {
@@ -55,36 +55,11 @@ exports.createPetProfile = async (req, res) => {
     });
   }
 
-  let petPictureUrl = petPicturePath;
-  if (!petPictureUrl || petPictureUrl === '') {
-    petPictureUrl = 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png'; 
-  } else {
-    // Upload image to ImgHippo
-    const form = new FormData();
-    form.append('petPicturePath', fs.createReadStream(petPicturePath));
-    form.append('apiKey', API_KEY);
-
-    try {
-      const response = await axios.post(IMGHI_URL, form, {
-        headers: {
-          ...form.getHeaders(),
-        },
-      });
-      petPictureUrl = response.data.url; // Get the URL from the response
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to upload image',
-        error: error.message,
-      });
-    }
-  }
-
   const newPetProfile = new PetProfile({
     user: req.user.id, 
     petName,
     petType,
-    petPictures: petPictureUrl,  // Ensure the final petPictures is used
+    petPictures: petPicturePath,  // Use the uploaded image URL
     petAge,
     petBreed,
     petDescription,
@@ -97,7 +72,7 @@ exports.createPetProfile = async (req, res) => {
       success: true,
       message: 'Pet profile created successfully',
       petProfile: newPetProfile,
-      petPictureUrl, // Return the URL for Dart
+      petPicturePath, // Return the URL for Dart
     });
   } catch (error) {
     res.status(500).json({
@@ -107,6 +82,7 @@ exports.createPetProfile = async (req, res) => {
     });
   }
 };
+
 exports.getPetProfiles = async (req, res) => {
   try {
     const petProfiles = await PetProfile.find({
