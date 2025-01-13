@@ -2,11 +2,13 @@ const axios = require('axios');
 const fs = require('fs');
 const FormData = require('form-data');
 const PetProfile = require('../models/PetProfile');
+mongoose = require('mongoose');
 
-const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
+const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';  // Your ImgHippo API Key
 
-exports.uploadPetPictureAndCreateProfile = async (req, res) => {
+// Upload image and create pet profile
+exports.uploadPhotoAndCreatePet = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       success: false,
@@ -38,8 +40,9 @@ exports.uploadPetPictureAndCreateProfile = async (req, res) => {
       });
     }
 
-    // Step 3: Create new pet profile
+    // Step 3: Create the pet profile
     const { petName, petType, petAge, petBreed, petDescription } = req.body;
+
     const newPetProfile = new PetProfile({
       user: req.user.id, 
       petName,
@@ -59,8 +62,9 @@ exports.uploadPetPictureAndCreateProfile = async (req, res) => {
       petProfile: newPetProfile,
       petPictureUrl, // Return the URL for Dart
     });
-    
+
   } catch (error) {
+    console.log("Error during upload or profile creation:", error);
     res.status(500).json({
       success: false,
       message: 'Failed to upload image or create pet profile',
