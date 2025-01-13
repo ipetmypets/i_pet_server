@@ -139,3 +139,30 @@ exports.getPetProfiles = async (req, res) => {
     });
   }
 };
+// Delete a pet profile
+exports.deletePetProfile = async (req, res) => {
+  const { profileId } = req.params;
+
+  try {
+    const petProfile = await PetProfile.findOneAndDelete({ _id: profileId, user: req.user.id });
+
+    if (!petProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Pet profile not found or you do not have permission to delete it',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Pet profile deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error during profile deletion:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete pet profile',
+      error: error.message,
+    });
+  }
+};
