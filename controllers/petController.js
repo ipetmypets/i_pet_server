@@ -18,8 +18,8 @@ exports.uploadPetPicture = async (req, res) => {
 
   const form = new FormData();
   const imagePath = req.file.path;
-  form.append('petPicture', fs.createReadStream(imagePath));  // Ensure the field name is correct
-  form.append('api_key', API_KEY); // Add ImgHippo API Key
+  form.append('petPicture', fs.createReadStream(imagePath));  
+  form.append('api_key', API_KEY); 
 
   try {
     // Step 1: Upload the image to ImgHippo
