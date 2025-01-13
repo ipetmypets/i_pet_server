@@ -8,10 +8,6 @@ const mongoose = require('mongoose');
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
-// Multer setup for handling multipart form data
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
 exports.uploadPetPicture = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -19,7 +15,7 @@ exports.uploadPetPicture = async (req, res) => {
       message: 'No picture path provided',
     });
   }
-
+console.log(req.file);
   const form = new FormData();
      const imagePath = req.file.path;
      form.append('file', fs.createReadStream(imagePath));  // Ensure the field name is correct
