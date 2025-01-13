@@ -8,6 +8,9 @@ const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
 exports.uploadPetPicture = async (req, res) => {
   const { petPicturePath } = req.body;
+  
+
+  console.log(petPicturePath);
 
   if (!petPicturePath || petPicturePath === '') {
     return res.status(400).json({
