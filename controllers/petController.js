@@ -19,7 +19,7 @@ exports.uploadPetPicture = async (req, res) => {
 
   const form = new FormData();
   const imagePath = req.file.path;
-  form.append('petPicture', fs.createReadStream(imagePath));
+  form.append('file', fs.createReadStream(imagePath));
   form.append('api_key', API_KEY);
 
  
