@@ -9,6 +9,6 @@ const upload = multer({ dest: 'uploads/' });
 
 router.post('/create', checkAuth, createPetProfile);
 router.get('/profiles', checkAuth, getPetProfiles);
-router.post('/uploadPetPicture', checkAuth, upload.single('petPicturePath'), uploadPetPicture);
+router.post('/uploadPetPicture', checkAuth, upload.single('petPictures'), uploadPetPicture);
 
 module.exports = router;
