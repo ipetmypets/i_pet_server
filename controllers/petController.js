@@ -8,7 +8,7 @@ const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';  // Your ImgHippo API Key
 
 // Upload image and create pet profile
-exports.uploadPhotoAndCreatePet = async (req, res) => {
+exports.uploadPetPicture = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       success: false,
