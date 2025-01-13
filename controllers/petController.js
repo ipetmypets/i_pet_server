@@ -47,13 +47,20 @@ exports.uploadPetPicture = async (req, res) => {
         message: 'Missing required pet profile fields',
       });
     }
+    const parsedPetAge = parseInt(petAge, 10);
+    if (isNaN(parsedPetAge)) {
+      return res.status(400).json({
+       success: false,
+        message: 'Invalid value for petAge. It must be a number.',
+  });
+}
 
     const newPetProfile = new PetProfile({
       user: req.user.id,
       petName,
       petType,
       petPictures: petPictureUrl,
-      petAge,
+      petAge: parsedPetAge,
       petBreed,
       petDescription,
     });
