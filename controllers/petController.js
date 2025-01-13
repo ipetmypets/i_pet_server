@@ -4,8 +4,8 @@ const FormData = require('form-data');
 const PetProfile = require('../models/PetProfile');
 mongoose = require('mongoose');
 
+const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
-const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';  // Your ImgHippo API Key
 
 // Upload image and create pet profile
 exports.uploadPetPicture = async (req, res) => {
@@ -15,7 +15,7 @@ exports.uploadPetPicture = async (req, res) => {
       message: 'No picture path provided',
     });
   }
-
+console.log(req.file.path);
   const form = new FormData();
   const imagePath = req.file.path;
   form.append('petPicture', fs.createReadStream(imagePath));  
