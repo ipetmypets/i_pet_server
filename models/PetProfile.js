@@ -7,9 +7,8 @@ const petProfileSchema = new mongoose.Schema({
   petPictures: { type: String, required: true },
   petAge: { type: Number, required: true },
   petBreed: { type: String, required: true },
-  petDescription: { type: String },
+  petDescription: { type: String, required: true },
 });
 
 const PetProfile = mongoose.model('PetProfile', petProfileSchema);
-
 module.exports = PetProfile;

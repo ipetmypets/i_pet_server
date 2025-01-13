@@ -24,6 +24,7 @@ exports.uploadPetPicture = async (req, res) => {
   form.append('api_key', API_KEY);
 
   try {
+    // Upload the image to ImgHippo API
     const response = await axios.post(IMGHI_URL, form, {
       headers: {
         Authorization: `Bearer ${API_KEY}`,
@@ -31,6 +32,7 @@ exports.uploadPetPicture = async (req, res) => {
       },
     });
 
+    // Check if the ImgHippo API response contains a valid URL
     const petPictureUrl = response.data.url;
     if (!petPictureUrl) {
       return res.status(500).json({
@@ -39,34 +41,50 @@ exports.uploadPetPicture = async (req, res) => {
       });
     }
 
+    // Extract pet details from request body
     const { petName, petType, petAge, petBreed, petDescription } = req.body;
 
+    // Validate the required fields
     if (!petName || !petType || !petAge || !petBreed || !petDescription) {
       return res.status(400).json({
         success: false,
         message: 'Missing required pet profile fields',
       });
     }
+
+    // Parse pet age as an integer
     const parsedPetAge = parseInt(petAge, 10);
     if (isNaN(parsedPetAge)) {
       return res.status(400).json({
-       success: false,
+        success: false,
         message: 'Invalid value for petAge. It must be a number.',
-  });
-}
+      });
+    }
 
+    // Check if the user already has 5 pet profiles
+    const profileCount = await PetProfile.countDocuments({ user: req.user.id });
+    if (profileCount >= 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'You can only create up to 5 pet profiles',
+      });
+    }
+
+    // Create a new PetProfile object
     const newPetProfile = new PetProfile({
       user: req.user.id,
       petName,
       petType,
-      petPictures: petPictureUrl,
+      petPictures: petPictureUrl,  // Use the uploaded image URL
       petAge: parsedPetAge,
       petBreed,
       petDescription,
     });
 
+    // Save the new pet profile to the database
     await newPetProfile.save();
 
+    // Return success response with the created pet profile
     res.status(201).json({
       success: true,
       message: 'Pet profile created successfully',
@@ -83,12 +101,12 @@ exports.uploadPetPicture = async (req, res) => {
   }
 };
 
-
-
+// Get pet profiles (excluding the logged-in user's pet profiles)
 exports.getPetProfiles = async (req, res) => {
   try {
+    // Fetch pet profiles that do not belong to the logged-in user
     const petProfiles = await PetProfile.find({
-      user: { $ne: req.user.id }   // Exclude the logged-in user's pet profiles
+      user: { $ne: req.user.id }  // Exclude the logged-in user's pet profiles
     });
 
     res.status(200).json({
