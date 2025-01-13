@@ -4,9 +4,8 @@ const { createPetProfile, getPetProfiles, uploadPetPicture } = require('../contr
 const { checkAuth } = require('../middleware/authMiddleware');
 const multer = require('multer');
 
+const upload = multer({ dest: 'uploads/' });
 // Multer setup for handling multipart form data
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
 
 router.post('/create', checkAuth, createPetProfile);
 router.get('/profiles', checkAuth, getPetProfiles);
