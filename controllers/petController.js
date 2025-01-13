@@ -3,6 +3,7 @@ const fs = require('fs');
 const FormData = require('form-data');
 const PetProfile = require('../models/PetProfile');
 const multer = require('multer');
+const mongoose = require('mongoose'); 
 
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
@@ -20,8 +21,9 @@ exports.uploadPetPicture = async (req, res) => {
   }
 
   const form = new FormData();
-  form.append('file', req.file.buffer, req.file.originalname);
-  form.append('apiKey', API_KEY);
+     const imagePath = req.file.path;
+     form.append('file', fs.createReadStream(imagePath));  // Ensure the field name is correct
+     form.append('api_key', API_KEY); // Add ImgHippo API Key
 
   try {
     const response = await axios.post(IMGHI_URL, form, {
