@@ -65,6 +65,7 @@ const uploadUserImage = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+    console.log(req.file);
 
     const form = new FormData();
     const imagePath = req.file.path;
