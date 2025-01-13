@@ -146,7 +146,6 @@ exports.deletePetProfile = async (req, res) => {
 
   try {
     const petProfile = await PetProfile.findOneAndDelete({ _id: profileId, user: req.user.id });
-console.log(petProfile);
     if (!petProfile) {
       return res.status(404).json({
         success: false,
@@ -159,7 +158,7 @@ console.log(petProfile);
       message: 'Pet profile deleted successfully',
     });
   } catch (error) {
-    console.log(petProfile,req.user.id,error,'sssss');
+    console.log('sssss');
     console.error('Error during profile deletion:', error);
     res.status(500).json({
       success: false,
