@@ -15,14 +15,10 @@ exports.uploadPetPicture = async (req, res) => {
     });
   }
 
- 
-
   const form = new FormData();
   const imagePath = req.file.path;
   form.append('file', fs.createReadStream(imagePath));
   form.append('api_key', API_KEY);
-
- 
 
   try {
     // Upload the image to ImgHippo API
@@ -31,9 +27,9 @@ exports.uploadPetPicture = async (req, res) => {
         ...form.getHeaders(),
       },
     });
-    console.log('Received file path:', response.data);
+    console.log('Received file path:', response.data, response.data.url, response.data.data.url);
     // Check if the ImgHippo API response contains a valid URL
-    const petPictureUrl = response.data.url || response.data.data.url;
+    const petPictureUrl = response.data.url || (response.data.data && response.data.data.url);
     
     if (!petPictureUrl) {
       return res.status(500).json({
