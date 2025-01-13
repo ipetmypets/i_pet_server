@@ -7,7 +7,7 @@ mongoose = require('mongoose');
 const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
 const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
-// Upload image and create pet profile
+// Upload pet picture and create a profile
 exports.uploadPetPicture = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -15,23 +15,25 @@ exports.uploadPetPicture = async (req, res) => {
       message: 'No picture path provided',
     });
   }
-console.log(req.file.path);
+
+  console.log(req.file.path);
   const form = new FormData();
   const imagePath = req.file.path;
-  form.append('petPicture', fs.createReadStream(imagePath));  
-  form.append('api_key', API_KEY); 
+  form.append('file', fs.createReadStream(imagePath));  
+  form.append('api_key', API_KEY);
 
   try {
     // Step 1: Upload the image to ImgHippo
     const response = await axios.post(IMGHI_URL, form, {
       headers: {
+        'Authorization': `Bearer ${API_KEY}`, 
         ...form.getHeaders(),
       },
     });
 
-    const petPictureUrl = response.data.url; // Get the URL from the response
+    const petPictureUrl = response.data.url; // Extract the uploaded image URL
 
-    // Step 2: Check if user has already created 5 profiles
+    // Step 2: Check if the user has already created 5 profiles
     const profileCount = await PetProfile.countDocuments({ user: req.user.id });
     if (profileCount >= 5) {
       return res.status(400).json({
@@ -44,10 +46,10 @@ console.log(req.file.path);
     const { petName, petType, petAge, petBreed, petDescription } = req.body;
 
     const newPetProfile = new PetProfile({
-      user: req.user.id, 
+      user: req.user.id,
       petName,
       petType,
-      petPictures: petPictureUrl,  // Use the uploaded image URL
+      petPictures: petPictureUrl, // Use the uploaded image URL
       petAge,
       petBreed,
       petDescription,
@@ -55,16 +57,16 @@ console.log(req.file.path);
 
     await newPetProfile.save();
 
-    // Step 4: Return response
+    // Step 4: Return the response
     res.status(201).json({
       success: true,
       message: 'Pet profile created successfully',
       petProfile: newPetProfile,
-      petPictureUrl, // Return the URL for Dart
+      petPictureUrl,
     });
 
   } catch (error) {
-    console.log("Error during upload or profile creation:", error);
+    console.error('Error during upload or profile creation:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to upload image or create pet profile',
@@ -72,6 +74,7 @@ console.log(req.file.path);
     });
   }
 };
+
 
 exports.getPetProfiles = async (req, res) => {
   try {
