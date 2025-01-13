@@ -34,6 +34,9 @@ exports.uploadPetPicture = async (req, res) => {
 
     // Check if the ImgHippo API response contains a valid URL
     const petPictureUrl = response.data.url;
+
+    console.log(peytPictureUrl);
+    
     if (!petPictureUrl) {
       return res.status(500).json({
         success: false,
