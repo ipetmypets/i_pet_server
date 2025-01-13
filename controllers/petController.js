@@ -161,8 +161,7 @@ exports.deletePetProfile = async (req, res) => {
     console.error('Error during profile deletion:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete pet profile',
-      error: error.message,
+      message: 'An unexpected error occurred while deleting the profile.',
     });
   }
 };
