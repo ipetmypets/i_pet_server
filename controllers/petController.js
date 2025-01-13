@@ -31,9 +31,9 @@ exports.uploadPetPicture = async (req, res) => {
         ...form.getHeaders(),
       },
     });
-    console.log('Received file path:', response.data.url);
+    console.log('Received file path:', response.data);
     // Check if the ImgHippo API response contains a valid URL
-    const petPictureUrl = response.data.url;
+    const petPictureUrl = response.data.url || response.data.data.url;
     
     if (!petPictureUrl) {
       return res.status(500).json({
