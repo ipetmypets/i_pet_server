@@ -10,7 +10,7 @@ exports.uploadPetPicture = async (req, res) => {
   const { petPicturePath } = req.body;
   
 
-  console.log(petPicturePath);
+  console.log(req.body);
 
   if (!petPicturePath || petPicturePath === '') {
     return res.status(400).json({
