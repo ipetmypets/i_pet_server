@@ -116,14 +116,20 @@ exports.createPetProfile = async (req, res) => {
 // Get pet profiles (excluding the logged-in user's pet profiles)
 exports.getPetProfiles = async (req, res) => {
   try {
-    // Fetch pet profiles that do not belong to the logged-in user
-    const petProfiles = await PetProfile.find({
-      user: { $ne: req.user.id }  // Exclude the logged-in user's pet profiles
-    });
+    const { type } = req.query;
+    let petProfiles;
+
+    if (type === 'own') {
+      // Fetch pet profiles that belong to the logged-in user
+      petProfiles = await PetProfile.find({ user: req.user.id });
+    } else {
+      // Fetch pet profiles that do not belong to the logged-in user
+      petProfiles = await PetProfile.find({ user: { $ne: req.user.id } });
+    }
 
     res.status(200).json({
       success: true,
-      petProfiles,  // Return the list of pet profiles
+      petProfiles,
     });
   } catch (error) {
     res.status(500).json({
