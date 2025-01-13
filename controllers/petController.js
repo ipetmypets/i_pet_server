@@ -28,7 +28,6 @@ exports.uploadPetPicture = async (req, res) => {
     // Upload the image to ImgHippo API
     const response = await axios.post(IMGHI_URL, form, {
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
         ...form.getHeaders(),
       },
     });
