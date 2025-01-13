@@ -19,19 +19,28 @@ exports.uploadPetPicture = async (req, res) => {
   console.log(req.file.path);
   const form = new FormData();
   const imagePath = req.file.path;
-  form.append('file', fs.createReadStream(imagePath));  
+  form.append('file', fs.createReadStream(imagePath));
   form.append('api_key', API_KEY);
 
   try {
     // Step 1: Upload the image to ImgHippo
     const response = await axios.post(IMGHI_URL, form, {
       headers: {
-        'Authorization': `Bearer ${API_KEY}`, 
+        Authorization: `Bearer ${API_KEY}`,
         ...form.getHeaders(),
       },
     });
 
-    const petPictureUrl = response.data.url; // Extract the uploaded image URL
+    console.log('ImgHippo response:', response.data);
+
+    // Ensure the API response contains a valid URL
+    const petPictureUrl = response.data.url;
+    if (!petPictureUrl) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to upload the image. ImgHippo API did not return a URL.',
+      });
+    }
 
     // Step 2: Check if the user has already created 5 profiles
     const profileCount = await PetProfile.countDocuments({ user: req.user.id });
@@ -64,7 +73,6 @@ exports.uploadPetPicture = async (req, res) => {
       petProfile: newPetProfile,
       petPictureUrl,
     });
-
   } catch (error) {
     console.error('Error during upload or profile creation:', error);
     res.status(500).json({
@@ -74,6 +82,7 @@ exports.uploadPetPicture = async (req, res) => {
     });
   }
 };
+
 
 
 exports.getPetProfiles = async (req, res) => {
