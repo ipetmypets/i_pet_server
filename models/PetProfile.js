@@ -10,8 +10,8 @@ const petProfileSchema = new mongoose.Schema({
   petDescription: { type: String, required: true },
   favorites: [
     {
-      userId: mongoose.Types.ObjectId,
-      favoritedAt: Date,
+      userId: { type: mongoose.Types.ObjectId, ref: 'User' },
+      favoritedAt: { type: Date, default: Date.now },
     },
   ],
 });

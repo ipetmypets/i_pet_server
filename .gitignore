@@ -1,0 +1,17 @@
+# Node modules folder
+node_modules/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# Firebase credentials
+config/firebase-service-account.json
+
+# Mac system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
