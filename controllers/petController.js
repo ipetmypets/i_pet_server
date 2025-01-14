@@ -165,46 +165,5 @@ exports.deletePetProfile = async (req, res) => {
     });
   }
 };
-exports.favoritePet = async (req, res) => {
-  const { petId } = req.params;
-  const userId = req.user.id;
 
-  try {
-    // Find the pet profile
-    const petProfile = await PetProfile.findById(petId);
-    if (!petProfile) {
-      return res.status(404).json({ success: false, message: 'Pet profile not found' });
-    }
-
-    // Check if the user already favorited the pet
-    const alreadyFavorited = petProfile.favorites.some(fav => fav.userId.toString() === userId);
-    if (alreadyFavorited) {
-      return res.status(400).json({ success: false, message: 'You already favorited this pet' });
-    }
-
-    // Add user to favorites
-    petProfile.favorites.push({ userId });
-    await petProfile.save();
-
-    // Mock notification system
-    console.log(`Notification: User ${userId} favorited your pet ${petProfile.petName}`);
-
-    res.status(200).json({ success: true, message: 'Pet favorited successfully' });
-  } catch (error) {
-    console.error('Error favoriting pet:', error);
-    res.status(500).json({ success: false, message: 'An error occurred', error: error.message });
-  }
-};
-exports.getFavoritedPets = async (req, res) => {
-  const userId = req.user.id;
-
-  try {
-    // Find all pet profiles where the user is in the favorites array
-    const favoritedPets = await PetProfile.find({ 'favorites.userId': userId });
-    res.status(200).json({ success: true, favoritedPets });
-  } catch (error) {
-    console.error('Error fetching favorited pets:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch favorited pets', error: error.message });
-  }
-};
 
