@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Relationship = require('../models/Relationship');
 
 // 1. Send Friend Request
@@ -5,11 +6,14 @@ exports.sendFriendRequest = async (req, res) => {
   const { receiver_id } = req.body;
   const sender_id = req.user.id;
 
+  // Convert receiver_id to ObjectId
+  const receiverObjectId = mongoose.Types.ObjectId(receiver_id);
+
   // Check if the relationship already exists
   const existingRequest = await Relationship.findOne({
     $or: [
-      { sender_id, receiver_id },
-      { sender_id: receiver_id, receiver_id: sender_id }
+      { sender_id, receiver_id: receiverObjectId },
+      { sender_id: receiverObjectId, receiver_id: sender_id }
     ]
   });
 
@@ -20,7 +24,7 @@ exports.sendFriendRequest = async (req, res) => {
   try {
     const newRequest = new Relationship({
       sender_id,
-      receiver_id,
+      receiver_id: receiverObjectId,
       status: 'pending',
     });
     await newRequest.save();
@@ -38,6 +42,7 @@ exports.updateFriendRequestStatus = async (req, res) => {
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
   }
+
   try {
     const relationship = await Relationship.findOneAndUpdate(
       { sender_id, receiver_id, status: 'pending' },
@@ -47,10 +52,6 @@ exports.updateFriendRequestStatus = async (req, res) => {
 
     if (!relationship) {
       return res.status(404).json({ message: 'No pending friend request found' });
-    }
-
-    if (status === 'accepted') {
-      // You can add logic here to create a friendship in another collection if necessary.
     }
 
     res.status(200).json({ message: 'Friend request updated', relationship });
@@ -64,11 +65,14 @@ exports.checkRelationshipStatus = async (req, res) => {
   const { receiver_id } = req.params;
   const sender_id = req.user.id;
 
+  // Convert receiver_id to ObjectId
+  const receiverObjectId = mongoose.Types.ObjectId(receiver_id);
+
   try {
     const relationship = await Relationship.findOne({
       $or: [
-        { sender_id, receiver_id },
-        { sender_id: receiver_id, receiver_id: sender_id }
+        { sender_id, receiver_id: receiverObjectId },
+        { sender_id: receiverObjectId, receiver_id: sender_id }
       ]
     });
 
