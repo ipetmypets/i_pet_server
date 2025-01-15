@@ -7,7 +7,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const petRoutes = require('./routes/pet');
 const messageRoutes = require('./routes/message');
-const matchRoutes = require('./routes/relationship');
+const relationshipRoutes = require('./routes/relationship');
 
 dotenv.config();
 const app = express();
@@ -24,7 +24,7 @@ app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/pet', petRoutes);
 app.use('/message', messageRoutes);
-app.use('/match', matchRoutes);
+app.use('/relationship', relationshipRoutes);
 
 app.get('/api', (req, res) => {
     res.json({ message: "Welcome to the iPetMyPets API!" });
