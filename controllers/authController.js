@@ -22,7 +22,7 @@ exports.register = async (req, res) => {
 
     await newUser.save();
 
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: newUser._id,username: newUser.username }, process.env.JWT_SECRET);
     res.status(201).json({ token });
   } catch (err) {
     console.error('Registration error:', err);
