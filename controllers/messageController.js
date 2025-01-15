@@ -1,11 +1,7 @@
-const express = require('express');
 const Message = require('../models/Message');
-const { checkAuth } = require('../middleware/authMiddleware'); // Middleware to protect routes
-
-const router = express.Router();
 
 // Send a message
-router.post('/send', checkAuth, async (req, res) => {
+exports.sendMessage = async (req, res) => {
   const { receiver, content } = req.body;
   const sender = req.user.id; // The user sending the message, from the JWT token
 
@@ -26,10 +22,10 @@ router.post('/send', checkAuth, async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Error sending message' });
   }
-});
+};
 
 // Get messages between two users
-router.get('/conversation/:userId', checkAuth, async (req, res) => {
+exports.getMessages = async (req, res) => {
   const { userId } = req.params;
   const currentUser = req.user.id; // The currently authenticated user
 
@@ -51,10 +47,10 @@ router.get('/conversation/:userId', checkAuth, async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Error retrieving conversation' });
   }
-});
+};
 
 // Delete a message (only the sender can delete their own messages)
-router.delete('/:messageId', checkAuth, async (req, res) => {
+exports.deleteMessage = async (req, res) => {
   const { messageId } = req.params;
   const userId = req.user.id; // The user performing the deletion
 
@@ -74,6 +70,4 @@ router.delete('/:messageId', checkAuth, async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Error deleting message' });
   }
-});
-
-module.exports = router;
+};
