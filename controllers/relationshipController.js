@@ -19,7 +19,7 @@ exports.sendFriendRequest = async (req, res) => {
   try {
     const newRequest = new Relationship({
       sender_id,
-      receiver_id:req.user.id,
+      receiver_id,
       status: 'pending',
     });
     await newRequest.save();
