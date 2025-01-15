@@ -2,13 +2,14 @@ const Relationship = require('../models/Relationship');
 
 // 1. Send Friend Request
 exports.sendFriendRequest = async (req, res) => {
-  const { sender_id, receiver_id } = req.body;
+  const { receiver_id } = req.body;
+  const sender_id = req.user.id;
 
   // Check if the relationship already exists
   const existingRequest = await Relationship.findOne({
     $or: [
       { sender_id, receiver_id },
-      { sender_id: receiver_id, receiver_id: sender_id }
+      { sender_id: receiver_id, receiver_id }
     ]
   });
 
@@ -31,12 +32,12 @@ exports.sendFriendRequest = async (req, res) => {
 
 // 2. Accept or Reject Friend Request
 exports.updateFriendRequestStatus = async (req, res) => {
-  const { sender_id, receiver_id, status } = req.body;
+  const { receiver_id, status } = req.body;
+  const sender_id = req.user.id;
 
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
   }
-
   try {
     const relationship = await Relationship.findOneAndUpdate(
       { sender_id, receiver_id, status: 'pending' },
@@ -60,7 +61,8 @@ exports.updateFriendRequestStatus = async (req, res) => {
 
 // 3. Check Relationship Status
 exports.checkRelationshipStatus = async (req, res) => {
-  const { sender_id, receiver_id } = req.params;
+  const { receiver_id } = req.params;
+  const sender_id = req.user.id;
 
   try {
     const relationship = await Relationship.findOne({
