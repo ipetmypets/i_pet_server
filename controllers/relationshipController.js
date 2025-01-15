@@ -7,7 +7,7 @@ exports.sendFriendRequest = async (req, res) => {
   const sender_id = req.user.id;
 
   // Convert receiver_id to ObjectId
-  const receiverObjectId = mongoose.Types.ObjectId(receiver_id);
+  const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
 
   // Check if the relationship already exists
   const existingRequest = await Relationship.findOne({
@@ -66,7 +66,7 @@ exports.checkRelationshipStatus = async (req, res) => {
   const sender_id = req.user.id;
 
   // Convert receiver_id to ObjectId
-  const receiverObjectId = mongoose.Types.ObjectId(receiver_id);
+  const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
 
   try {
     const relationship = await Relationship.findOne({
