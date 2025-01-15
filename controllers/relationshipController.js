@@ -1,22 +1,18 @@
 const mongoose = require('mongoose');
 const Relationship = require('../models/Relationship');
+const Notification = require('../models/Notification');
 
 // 1. Send Friend Request
 exports.sendFriendRequest = async (req, res) => {
   const { receiver_id } = req.body;
   const sender_id = req.user.id;
-
-  // Convert receiver_id to ObjectId
   const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
-
-  // Check if the relationship already exists
   const existingRequest = await Relationship.findOne({
     $or: [
       { sender_id, receiver_id: receiverObjectId },
       { sender_id: receiverObjectId, receiver_id: sender_id }
     ]
   });
-
   if (existingRequest) {
     return res.status(400).json({ message: 'Request already exists or relationship already exists' });
   }
@@ -28,6 +24,17 @@ exports.sendFriendRequest = async (req, res) => {
       status: 'pending',
     });
     await newRequest.save();
+
+    const notification = new Notification({
+      receiver_id: receiverObjectId,
+      senderId: sender_id,
+      type: 'friend_request',
+      message: `You have a new friend request from ${req.user.username}`,
+
+    });
+    await notification.save();
+
+
     res.status(201).json({ message: 'Friend request sent successfully', request: newRequest });
   } catch (err) {
     res.status(500).json({ message: 'Error sending friend request', error: err.message });
