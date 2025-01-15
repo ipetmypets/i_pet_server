@@ -85,3 +85,28 @@ exports.checkRelationshipStatus = async (req, res) => {
     res.status(500).json({ message: 'Error checking relationship status', error: err.message });
   }
 };
+
+// 4. Remove Friend Request
+exports.removeFriendRequest = async (req, res) => {
+  const { receiver_id } = req.body;
+  const sender_id = req.user.id;
+
+  // Convert receiver_id to ObjectId
+  const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
+
+  try {
+    const relationship = await Relationship.findOneAndDelete({
+      sender_id,
+      receiver_id: receiverObjectId,
+      status: 'pending'
+    });
+
+    if (!relationship) {
+      return res.status(404).json({ message: 'No pending friend request found to remove' });
+    }
+
+    res.status(200).json({ message: 'Friend request removed successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error removing friend request', error: err.message });
+  }
+};
