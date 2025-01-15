@@ -9,7 +9,7 @@ exports.sendFriendRequest = async (req, res) => {
   const existingRequest = await Relationship.findOne({
     $or: [
       { sender_id, receiver_id },
-      { sender_id: receiver_id, receiver_id }
+      { sender_id: receiver_id, receiver_id: sender_id }
     ]
   });
 
@@ -32,8 +32,8 @@ exports.sendFriendRequest = async (req, res) => {
 
 // 2. Accept or Reject Friend Request
 exports.updateFriendRequestStatus = async (req, res) => {
-  const { receiver_id, status } = req.body;
-  const sender_id = req.user.id;
+  const { sender_id, status } = req.body;
+  const receiver_id = req.user.id;
 
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
