@@ -67,7 +67,7 @@ exports.updateFriendRequestStatus = async (req, res) => {
   }
 };
 
-// 3. Check Relationship Status
+// Check Relationship Status
 exports.checkRelationshipStatus = async (req, res) => {
   const { receiver_id } = req.params;
   const sender_id = req.user.id;
@@ -87,7 +87,21 @@ exports.checkRelationshipStatus = async (req, res) => {
       return res.status(404).json({ message: 'No relationship found' });
     }
 
-    res.status(200).json({ message: 'Relationship status found', relationship });
+    // Determine the status message based on the relationship status
+    
+    if (relationship.status === 'pending') {
+      if (relationship.sender_id.toString() === sender_id) {
+        relationship.status==='pending';
+      } else {
+        relationship.status==='Accept Please';
+      }
+    } else if (relationship.status === 'accepted') {
+      relationship.status = 'Friends';
+    } else if (relationship.status === 'rejected') {
+      relationship.status = 'Rejected';
+    }
+
+    res.status(200).json({ message: statusMessage, relationship });
   } catch (err) {
     res.status(500).json({ message: 'Error checking relationship status', error: err.message });
   }
