@@ -84,12 +84,8 @@ exports.checkRelationshipStatus = async (req, res) => {
       if (relationship.sender_id.toString() === sender_id) {
         relationship.status='pending';
       } else {
-        relationship.status='Accept Please';
+        relationship.status='accept';
       }
-    } else if (relationship.status === 'accepted') {
-      relationship.status = 'Friends';
-    } else if (relationship.status === 'rejected') {
-      relationship.status ='Rejected';
     }
 
     res.status(200).json({ relationship });
