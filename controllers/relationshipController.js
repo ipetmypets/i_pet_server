@@ -25,16 +25,6 @@ exports.sendFriendRequest = async (req, res) => {
     });
     await newRequest.save();
 
-    const notification = new Notification({
-      userId: receiverObjectId,
-      senderId: sender_id,
-      type: 'friend_request',
-      message: `You have a new friend request from ${req.user.username}`,
-
-    });
-    await notification.save();
-
-
     res.status(201).json({ message: 'Friend request sent successfully', request: newRequest });
   } catch (err) {
     res.status(500).json({ message: 'Error server sending friend request', error: err.message });
@@ -43,9 +33,9 @@ exports.sendFriendRequest = async (req, res) => {
 
 // 2. Accept or Reject Friend Request
 exports.updateFriendRequestStatus = async (req, res) => {
-  const { sender, status } = req.body;
+  const { sender_id, status } = req.body;
   const receiver_id = req.user.id;
-  const sender_id = new mongoose.Types.ObjectId(sender);
+  const senderObjectId = new mongoose.Types.ObjectId(sender_id);
 
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
@@ -53,7 +43,7 @@ exports.updateFriendRequestStatus = async (req, res) => {
 
   try {
     const relationship = await Relationship.findOneAndUpdate(
-      { sender_id, receiver_id, status: 'pending' },
+      { sender_id:senderObjectId, receiver_id, status: 'pending' },
       { status, updated_at: Date.now() },
       { new: true }
     );
