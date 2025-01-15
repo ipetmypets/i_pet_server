@@ -7,7 +7,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const petRoutes = require('./routes/pet');
 const messageRoutes = require('./routes/message');
-const matchRoutes = require('./routes/match');
+const matchRoutes = require('./routes/relationship');
 
 dotenv.config();
 const app = express();
