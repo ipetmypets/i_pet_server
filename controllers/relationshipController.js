@@ -43,9 +43,9 @@ exports.sendFriendRequest = async (req, res) => {
 
 // 2. Accept or Reject Friend Request
 exports.updateFriendRequestStatus = async (req, res) => {
-  const { sender_id, status } = req.body;
+  const { sender, status } = req.body;
   const receiver_id = req.user.id;
-  const senderObjectId = new mongoose.Types.ObjectId(sender_id);
+  const sender_id = new mongoose.Types.ObjectId(sender);
 
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
@@ -53,7 +53,7 @@ exports.updateFriendRequestStatus = async (req, res) => {
 
   try {
     const relationship = await Relationship.findOneAndUpdate(
-      { senderObjectId, receiver_id, status: 'pending' },
+      { sender_id, receiver_id, status: 'pending' },
       { status, updated_at: Date.now() },
       { new: true }
     );
