@@ -26,7 +26,7 @@ exports.sendFriendRequest = async (req, res) => {
     await newRequest.save();
 
     const notification = new Notification({
-      receiver_id: receiverObjectId,
+      userId: receiverObjectId,
       senderId: sender_id,
       type: 'friend_request',
       message: `You have a new friend request from ${req.user.username}`,
@@ -37,7 +37,7 @@ exports.sendFriendRequest = async (req, res) => {
 
     res.status(201).json({ message: 'Friend request sent successfully', request: newRequest });
   } catch (err) {
-    res.status(500).json({ message: 'Error sending friend request', error: err.message });
+    res.status(500).json({ message: 'Error server sending friend request', error: err.message });
   }
 };
 
