@@ -1,11 +1,9 @@
-const axios = require('axios');
 const fs = require('fs');
-const FormData = require('form-data');
+const path = require('path');
 const User = require('../models/User');
+const upload = require('../middleware/upload');
 const mongoose = require('mongoose'); 
 
-const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
-const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
 
 // Get user profile
 const getUserProfile = async (req, res) => {
@@ -28,6 +26,7 @@ const getUserProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 const getOwnerProfile = async (req, res) => {
   try {
    
@@ -60,26 +59,26 @@ const getOwnerProfile = async (req, res) => {
 };
 
 
-const uploadUserImage = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+// Upload user image and update profile picture URL
+const uploadUserImage = (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err,
+      });
     }
-    const form = new FormData();
-    const imagePath = req.file.path;
-    form.append('file', fs.createReadStream(imagePath));  // Ensure the field name is correct
-    form.append('api_key', API_KEY); // Add ImgHippo API Key
 
-    const headers = {
-      'Authorization': `Bearer ${API_KEY}`, // Correct Authorization header
-      ...form.getHeaders(),
-    };
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded',
+      });
+    }
 
-    const response = await axios.post(IMGHI_URL, form, { headers });
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
-    if (response.data.success && response.data.data.url) {
-      const imageUrl = response.data.data.url;
-
+    try {
       const updatedUser = await User.findByIdAndUpdate(
         req.user.id,
         { profile_pic: imageUrl },
@@ -95,13 +94,11 @@ const uploadUserImage = async (req, res) => {
         message: 'Image uploaded and profile updated successfully',
         imageUrl: updatedUser.profile_pic,
       });
-    } else {
-      throw new Error('Failed to upload image');
+    } catch (error) {
+      console.error('Error during image upload:', error); // Log the error for debugging
+      return res.status(500).json({ error: 'Server error: ' + error.message });
     }
-  } catch (error) {
-    console.error('Error during image upload:', error); // Log the error for debugging
-    return res.status(500).json({ error: 'Server error: ' + error.message });
-  }
+  });
 };
 
 
