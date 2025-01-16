@@ -5,7 +5,7 @@ const { checkAuth } = require('../middleware/authMiddleware');
 
 router.post('/upload', checkAuth, uploadPetPicture);
 router.post('/create', checkAuth, createPetProfile);
-router.get('/', checkAuth, getPetProfiles);
-router.delete('/:profileId', checkAuth, deletePetProfile);
+router.get('/profiles', checkAuth, getPetProfiles);
+router.delete('/profiles/:profileId', checkAuth, deletePetProfile);
 
 module.exports = router;
