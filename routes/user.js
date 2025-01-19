@@ -1,7 +1,6 @@
 const express = require('express');
 const { getUserProfile, getOwnerProfile, uploadUserImage } = require('../controllers/userController');
 const { checkAuth } = require('../middleware/authMiddleware');
-const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -12,6 +11,6 @@ router.get('/profile', checkAuth, getUserProfile);
 router.get('/owner/:userId', checkAuth, getOwnerProfile);
 
 // Update user profile, including profile picture
-router.put('/upload-image', checkAuth, upload, uploadUserImage);
+router.put('/upload-image', checkAuth, uploadUserImage);
 
 module.exports = router;

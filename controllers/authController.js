@@ -3,16 +3,16 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 exports.register = async (req, res) => {
-  const { username, email,profile_pic, password, longitude, latitude } = req.body;
+  const { username, email, profile_pic, password, longitude, latitude } = req.body;
 
   try {
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ where: { email } });
     if (userExists) {
       return res.status(400).json({ message: 'Email already in use' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
+    const newUser = await User.create({
       username,
       email,
       profile_pic,
@@ -20,9 +20,7 @@ exports.register = async (req, res) => {
       Location: { longitude, latitude },  // Ensure this is an object with both fields
     });
 
-    await newUser.save();
-
-    const token = jwt.sign({ id: newUser._id,username: newUser.username }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: newUser.id, username: newUser.username }, process.env.JWT_SECRET);
     res.status(201).json({ token });
   } catch (err) {
     console.error('Registration error:', err);
@@ -40,7 +38,7 @@ exports.login = async (req, res) => {
 
   try {
     // Check if the user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }
@@ -57,10 +55,10 @@ exports.login = async (req, res) => {
     }
 
     // Generate JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET);
 
     // Respond with the token and user data
-    res.status(200).json({ token, user: { id: user._id, email: user.email } });
+    res.status(200).json({ token, user: { id: user.id, email: user.email } });
   } catch (err) {
     console.error('Login error:', err); // Log the error
     res.status(500).json({ message: 'Server error' });

@@ -1,15 +1,13 @@
-const fs = require('fs');
-const path = require('path');
 const PetProfile = require('../models/PetProfile');
 const upload = require('../middleware/upload');
 
 // Upload pet picture and return the URL
 exports.uploadPetPicture = (req, res) => {
-  upload(req, res, (err) => {
+  upload.single('petPicture')(req, res, (err) => {
     if (err) {
       return res.status(400).json({
         success: false,
-        message: err,
+        message: err.message || 'Error uploading file',
       });
     }
 
@@ -20,7 +18,7 @@ exports.uploadPetPicture = (req, res) => {
       });
     }
 
-    const petPictureUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const petPictureUrl = `${req.protocol}://${req.get('host')}/uploads/pets/${req.file.filename}`;
 
     res.status(200).json({
       success: true,
@@ -28,6 +26,7 @@ exports.uploadPetPicture = (req, res) => {
     });
   });
 };
+
 
 // Create a new pet profile
 exports.createPetProfile = async (req, res) => {

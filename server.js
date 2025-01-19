@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { connectDB } = require('./config/db');
+const { connectDB, sequelize } = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const petRoutes = require('./routes/pet');
@@ -19,6 +19,11 @@ app.use('/uploads', express.static('uploads')); // Serve static files from the u
 
 // Connect to MySQL
 connectDB();
+
+// Sync Sequelize models with database
+sequelize.sync({ alter: true }).then(() => {
+  console.log('Database & tables created!');
+});
 
 // Routes
 app.use('/auth', authRoutes);

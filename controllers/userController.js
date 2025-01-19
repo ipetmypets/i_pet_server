@@ -1,8 +1,6 @@
-const fs = require('fs');
 const path = require('path');
 const User = require('../models/User');
 const upload = require('../middleware/upload');
-const { Op } = require('sequelize');
 
 // Get logged-in user's profile
 const getUserProfile = async (req, res) => {
@@ -51,14 +49,13 @@ const getOwnerProfile = async (req, res) => {
     });
   }
 };
-
 // Upload user image and update profile picture URL
 const uploadUserImage = (req, res) => {
-  upload(req, res, async (err) => {
+  upload.single('profilePic')(req, res, async (err) => {
     if (err) {
       return res.status(400).json({
         success: false,
-        message: err,
+        message: err.message || 'Error uploading file',
       });
     }
 
@@ -69,16 +66,16 @@ const uploadUserImage = (req, res) => {
       });
     }
 
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/profiles/${req.file.filename}`;
 
     try {
-      const updatedUser = await User.update(
+      const [updated] = await User.update(
         { profile_pic: imageUrl },
         { where: { id: req.user.id } }
       );
 
-      if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' });
+      if (updated === 0) {
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
       return res.json({
@@ -88,7 +85,7 @@ const uploadUserImage = (req, res) => {
       });
     } catch (error) {
       console.error('Error during image upload:', error); // Log the error for debugging
-      return res.status(500).json({ error: 'Server error: ' + error.message });
+      return res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
   });
 };
