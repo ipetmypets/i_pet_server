@@ -1,56 +1,32 @@
-const axios = require('axios');
 const fs = require('fs');
-const FormData = require('form-data');
+const path = require('path');
 const PetProfile = require('../models/PetProfile');
-const e = require('express');
-
-const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
-const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
+const upload = require('../middleware/upload');
 
 // Upload pet picture and return the URL
-exports.uploadPetPicture = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({
-      success: false,
-      message: 'No picture path provided',
-    });
-  }
-
-  const form = new FormData();
-  const imagePath = req.file.path;
-  form.append('file', fs.createReadStream(imagePath));
-  form.append('api_key', API_KEY);
-
-  try {
- 
-    const response = await axios.post(IMGHI_URL, form, {
-      headers: {
-        ...form.getHeaders(),
-      },
-    });
-   
-    const petPictureUrl = response.data.url || (response.data.data && response.data.data.url);
-    
-    if (!petPictureUrl) {
-      return res.status(500).json({
+exports.uploadPetPicture = (req, res) => {
+  upload(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({
         success: false,
-        message: 'Failed to upload the image. ImgHippo API did not return a URL.',
+        message: err,
       });
     }
 
-    // Return the URL
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No picture path provided',
+      });
+    }
+
+    const petPictureUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
     res.status(200).json({
       success: true,
       petPictureUrl,
     });
-  } catch (error) {
-    console.error('Error during image upload:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to upload image',
-      error: error.message,
-    });
-  }
+  });
 };
 
 // Create a new pet profile
@@ -75,7 +51,7 @@ exports.createPetProfile = async (req, res) => {
   }
 
   // Check if the user already has 5 pet profiles
-  const profileCount = await PetProfile.countDocuments({ user: req.user.id });
+  const profileCount = await PetProfile.count({ where: { user: req.user.id } });
   if (profileCount >= 5) {
     return res.status(400).json({
       success: false,
@@ -122,10 +98,10 @@ exports.getPetProfiles = async (req, res) => {
 
     if (type === 'own') {
       // Fetch pet profiles that belong to the logged-in user
-      petProfiles = await PetProfile.find({ user: req.user.id });
+      petProfiles = await PetProfile.findAll({ where: { user: req.user.id } });
     } else {
       // Fetch pet profiles that do not belong to the logged-in user
-      petProfiles = await PetProfile.find({ user: { $ne: req.user.id } });
+      petProfiles = await PetProfile.findAll({ where: { user: { [Op.ne]: req.user.id } } });
     }
 
     res.status(200).json({
@@ -140,12 +116,13 @@ exports.getPetProfiles = async (req, res) => {
     });
   }
 };
+
 // Delete a pet profile
 exports.deletePetProfile = async (req, res) => {
   const { profileId } = req.params;
 
   try {
-    const petProfile = await PetProfile.findOneAndDelete({ _id: profileId, user: req.user.id });
+    const petProfile = await PetProfile.destroy({ where: { id: profileId, user: req.user.id } });
     if (!petProfile) {
       return res.status(404).json({
         success: false,
@@ -165,5 +142,3 @@ exports.deletePetProfile = async (req, res) => {
     });
   }
 };
-
-

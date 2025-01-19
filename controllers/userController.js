@@ -1,17 +1,14 @@
-const axios = require('axios');
 const fs = require('fs');
-const FormData = require('form-data');
+const path = require('path');
 const User = require('../models/User');
-const mongoose = require('mongoose'); 
+const upload = require('../middleware/upload');
+const { Op } = require('sequelize');
 
-const API_KEY = 'd9de14b33eb6ef3a291cbd94df9037d8';
-const IMGHI_URL = 'https://api.imghippo.com/v1/upload';
-
-// Get user profile
+// Get logged-in user's profile
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const user = await User.findById(userId).select('-password'); 
+    const user = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -21,29 +18,25 @@ const getUserProfile = async (req, res) => {
       username: user.username,
       email: user.email,
       profile_pic: user.profile_pic,
-      location: user.Location,  // Include location data
+      location: user.Location, // Include location data
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Get another user's profile by ID
 const getOwnerProfile = async (req, res) => {
   try {
-   
-    const userId = req.params.userId; // Get userId from URL parameter
+    const userId = req.params.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: 'Invalid userId format' });
-    }
+    const user = await User.findByPk(userId, { attributes: ['username', 'profile_pic', 'Location'] });
 
-    // Find user by _id
-    const user = await User.findById(userId).select('username profile_pic Location'); // Fetch specific fields (username, profile_pic, Location)
-
-    // If user is not found
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     res.status(200).json({
       success: true,
       username: user.username,
@@ -59,31 +52,29 @@ const getOwnerProfile = async (req, res) => {
   }
 };
 
-
-const uploadUserImage = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+// Upload user image and update profile picture URL
+const uploadUserImage = (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err,
+      });
     }
-    const form = new FormData();
-    const imagePath = req.file.path;
-    form.append('file', fs.createReadStream(imagePath));  // Ensure the field name is correct
-    form.append('api_key', API_KEY); // Add ImgHippo API Key
 
-    const headers = {
-      'Authorization': `Bearer ${API_KEY}`, // Correct Authorization header
-      ...form.getHeaders(),
-    };
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded',
+      });
+    }
 
-    const response = await axios.post(IMGHI_URL, form, { headers });
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
-    if (response.data.success && response.data.data.url) {
-      const imageUrl = response.data.data.url;
-
-      const updatedUser = await User.findByIdAndUpdate(
-        req.user.id,
+    try {
+      const updatedUser = await User.update(
         { profile_pic: imageUrl },
-        { new: true }
+        { where: { id: req.user.id } }
       );
 
       if (!updatedUser) {
@@ -93,20 +84,13 @@ const uploadUserImage = async (req, res) => {
       return res.json({
         success: true,
         message: 'Image uploaded and profile updated successfully',
-        imageUrl: updatedUser.profile_pic,
+        imageUrl,
       });
-    } else {
-      throw new Error('Failed to upload image');
+    } catch (error) {
+      console.error('Error during image upload:', error); // Log the error for debugging
+      return res.status(500).json({ error: 'Server error: ' + error.message });
     }
-  } catch (error) {
-    console.error('Error during image upload:', error); // Log the error for debugging
-    return res.status(500).json({ error: 'Server error: ' + error.message });
-  }
+  });
 };
 
-
-module.exports = {
-  getUserProfile,
-  getOwnerProfile,
-  uploadUserImage
-};
+module.exports = { getUserProfile, getOwnerProfile, uploadUserImage };

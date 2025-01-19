@@ -1,33 +1,34 @@
-const mongoose = require('mongoose');
+const { Op } = require('sequelize');
 const Relationship = require('../models/Relationship');
-const Notification = require('../models/Notification');
 
 // 1. Send Friend Request
 exports.sendFriendRequest = async (req, res) => {
   const { receiver_id } = req.body;
   const sender_id = req.user.id;
-  const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
-  const existingRequest = await Relationship.findOne({
-    $or: [
-      { sender_id, receiver_id: receiverObjectId },
-      { sender_id: receiverObjectId, receiver_id: sender_id }
-    ]
-  });
-  if (existingRequest) {
-    return res.status(400).json({ message: 'Request already exists or relationship already exists' });
-  }
 
   try {
-    const newRequest = new Relationship({
-      sender_id,
-      receiver_id: receiverObjectId,
-      status: 'pending',
+    const existingRequest = await Relationship.findOne({
+      where: {
+        [Op.or]: [
+          { sender_id, receiver_id },
+          { sender_id: receiver_id, receiver_id: sender_id }
+        ]
+      }
     });
-    await newRequest.save();
+
+    if (existingRequest) {
+      return res.status(400).json({ message: 'Request already exists or relationship already exists' });
+    }
+
+    const newRequest = await Relationship.create({
+      sender_id,
+      receiver_id,
+      status: 'pending'
+    });
 
     res.status(201).json({ message: 'Friend request sent successfully', request: newRequest });
   } catch (err) {
-    res.status(500).json({ message: 'Error server sending friend request', error: err.message });
+    res.status(500).json({ message: 'Error sending friend request', error: err.message });
   }
 };
 
@@ -35,22 +36,27 @@ exports.sendFriendRequest = async (req, res) => {
 exports.updateFriendRequestStatus = async (req, res) => {
   const { sender_id, status } = req.body;
   const receiver_id = req.user.id;
-  const senderObjectId = new mongoose.Types.ObjectId(sender_id);
 
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
   }
 
   try {
-    const relationship = await Relationship.findOneAndUpdate(
-      { sender_id:senderObjectId, receiver_id, status: 'pending' },
-      { status, updated_at: Date.now() },
-      { new: true }
-    );
+    const relationship = await Relationship.findOne({
+      where: {
+        sender_id,
+        receiver_id,
+        status: 'pending'
+      }
+    });
 
     if (!relationship) {
       return res.status(404).json({ message: 'No pending friend request found' });
     }
+
+    relationship.status = status;
+    relationship.updated_at = Date.now();
+    await relationship.save();
 
     res.status(200).json({ message: 'Friend request updated', relationship });
   } catch (err) {
@@ -63,29 +69,18 @@ exports.checkRelationshipStatus = async (req, res) => {
   const { receiver_id } = req.params;
   const sender_id = req.user.id;
 
-  // Convert receiver_id to ObjectId
-  const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
-
   try {
     const relationship = await Relationship.findOne({
-      $or: [
-        { sender_id, receiver_id: receiverObjectId },
-        { sender_id: receiverObjectId, receiver_id: sender_id }
-      ]
+      where: {
+        [Op.or]: [
+          { sender_id, receiver_id },
+          { sender_id: receiver_id, receiver_id: sender_id }
+        ]
+      }
     });
 
     if (!relationship) {
       return res.status(404).json({ message: 'No relationship found' });
-    }
-
-    // Determine the status message based on the relationship status
-    
-    if (relationship.status === 'pending') {
-      if (relationship.sender_id.toString() === sender_id) {
-        relationship.status='pending';
-      } else {
-        relationship.status='accept';
-      }
     }
 
     res.status(200).json({ relationship });
@@ -94,19 +89,56 @@ exports.checkRelationshipStatus = async (req, res) => {
   }
 };
 
+// Check Relationship Data
+exports.checkRelationshipData = async (req, res) => {
+  const { receiver_id } = req.params;
+  const sender_id = req.user.id;
+
+  try {
+    const relationship = await Relationship.findOne({
+      where: {
+        [Op.or]: [
+          { sender_id, receiver_id },
+          { sender_id: receiver_id, receiver_id: sender_id }
+        ]
+      }
+    });
+
+    if (!relationship) {
+      return res.status(404).json({ message: 'No relationship found' });
+    }
+
+    let statusMessage;
+    if (relationship.status === 'pending') {
+      if (relationship.sender_id.toString() === sender_id) {
+        statusMessage = 'Your friend request is pending.';
+      } else {
+        statusMessage = 'You have a pending friend request. Please accept or reject it.';
+      }
+    } else if (relationship.status === 'accepted') {
+      statusMessage = 'You are friends.';
+    } else if (relationship.status === 'rejected') {
+      statusMessage = 'The friend request was rejected.';
+    }
+
+    res.status(200).json({ relationship, statusMessage });
+  } catch (err) {
+    res.status(500).json({ message: 'Error checking relationship data', error: err.message });
+  }
+};
+
 // 4. Remove Friend Request
 exports.removeFriendRequest = async (req, res) => {
   const { receiver_id } = req.body;
   const sender_id = req.user.id;
 
-  // Convert receiver_id to ObjectId
-  const receiverObjectId = new mongoose.Types.ObjectId(receiver_id);
-
   try {
-    const relationship = await Relationship.findOneAndDelete({
-      sender_id,
-      receiver_id: receiverObjectId,
-      status: 'pending'
+    const relationship = await Relationship.destroy({
+      where: {
+        sender_id,
+        receiver_id,
+        status: 'pending'
+      }
     });
 
     if (!relationship) {

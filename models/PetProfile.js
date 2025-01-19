@@ -1,14 +1,38 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const petProfileSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  petName: { type: String, required: true },
-  petType: { type: String, required: true },
-  petPictures: { type: String, required: true },
-  petAge: { type: Number, required: true },
-  petBreed: { type: String, required: true },
-  petDescription: { type: String, required: true },
+const PetProfile = sequelize.define('PetProfile', {
+  user: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  petName: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  petType: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  petPictures: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  petAge: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  petBreed: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  petDescription: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
+}, {
+  tableName: 'pet_profiles',
+  timestamps: false
 });
 
-const PetProfile = mongoose.model('PetProfile', petProfileSchema);
 module.exports = PetProfile;

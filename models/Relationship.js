@@ -1,13 +1,30 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
 
-const relationshipSchema = new mongoose.Schema({
-  sender_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  receiver_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
-  status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+const Relationship = sequelize.define('Relationship', {
+  sender_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  receiver_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
+    defaultValue: 'pending'
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  }
+}, {
+  tableName: 'relationships',
+  timestamps: false
 });
-
-const Relationship = mongoose.model('Relationship', relationshipSchema);
 
 module.exports = Relationship;
