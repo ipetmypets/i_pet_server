@@ -13,6 +13,14 @@ const Message = sequelize.define('Message', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  userId: {
+    type: DataTypes.STRING,
+    allowNull: true, // Allow NULL values
+  },
+  chatId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 }, {
   tableName: 'messages',
   timestamps: true,
