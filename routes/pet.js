@@ -7,6 +7,6 @@ const router = express.Router();
 router.post('/upload', checkAuth, uploadPetPicture);
 router.post('/create', checkAuth, createPetProfile);
 router.get('/profiles', checkAuth, getPetProfiles);
-router.delete('profiles/:profileId', checkAuth, deletePetProfile);
+router.delete('/profiles/:petId', checkAuth, deletePetProfile);
 
 module.exports = router;

@@ -5,12 +5,15 @@ const { connectDB, sequelize } = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const petRoutes = require('./routes/pet');
-const messageRoutes = require('./routes/message');
 const relationshipRoutes = require('./routes/relationship');
-const notificationRoutes = require('./routes/notification'); 
+const chatRoutes = require('./routes/chat'); // Add chat routes
+const http = require('http');
+const socketIo = require('socket.io');
 
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 
 // Middleware
 app.use(cors());
@@ -29,16 +32,46 @@ sequelize.sync({ alter: true }).then(() => {
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/pet', petRoutes);
-app.use('/message', messageRoutes);
 app.use('/relationship', relationshipRoutes);
-app.use('/notification', notificationRoutes);
+app.use('/chat', chatRoutes); // Register chat routes
 
 app.get('/api', (req, res) => {
     res.json({ message: "Welcome to the iPetMyPets API!" });
 });
 
+// Socket.io setup
+const activeUsers = new Map();
+
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('user_connected', (userId) => {
+    activeUsers.set(userId, socket.id);
+    io.emit('active_users', Array.from(activeUsers.keys()));
+  });
+
+  socket.on('send_message', async ({ senderId, receiverId, message }) => {
+    const chat = await Chat.create({ senderId, receiverId, message });
+    const receiverSocketId = activeUsers.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('receive_message', chat);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+    for (let [userId, socketId] of activeUsers.entries()) {
+      if (socketId === socket.id) {
+        activeUsers.delete(userId);
+        break;
+      }
+    }
+    io.emit('active_users', Array.from(activeUsers.keys()));
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

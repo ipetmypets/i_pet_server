@@ -1,8 +1,10 @@
-const PetProfile = require('../models/PetProfile');
+const fs = require('fs');
+const path = require('path');
+const PetProfile = require('../models/Pet');
 const upload = require('../middleware/upload');
 const { Op } = require('sequelize');
 
-// Upload pet picture and return the URL
+// Upload pet picture temporarily and return the URL
 exports.uploadPetPicture = (req, res) => {
   console.log('Starting file upload'); // Debugging statement
   upload.single('petPicture')(req, res, (err) => {
@@ -32,22 +34,26 @@ exports.uploadPetPicture = (req, res) => {
       });
     }
 
-    const petPictureUrl = `${req.protocol}://${req.get('host')}/uploads/pets/${req.file.filename}`;
+    const tempFilePath = req.file.path;
+    const tempFileName = req.file.filename;
+    const petPictureUrl = `${req.protocol}://${req.get('host')}/uploads/temp/${tempFileName}`;
     console.log('File uploaded successfully:', petPictureUrl); // Debugging statement
 
     res.status(200).json({
       success: true,
       petPictureUrl,
+      tempFilePath,
+      tempFileName,
     });
   });
 };
 
 // Create a new pet profile
 exports.createPetProfile = async (req, res) => {
-  const { petName, petType, petPictureUrl, petAge, petBreed, petDescription } = req.body;
+  const { petName, petType, petAge, petBreed, petDescription, tempFilePath, tempFileName } = req.body;
 
   // Validate the required fields
-  if (!petName || !petType || !petAge || !petBreed || !petDescription || !petPictureUrl) {
+  if (!petName || !petType || !petAge || !petBreed || !petDescription || !tempFilePath || !tempFileName) {
     return res.status(400).json({
       success: false,
       message: 'Missing required pet profile fields',
@@ -77,7 +83,7 @@ exports.createPetProfile = async (req, res) => {
     ownerId: req.user.userId,
     petName,
     petType,
-    petPictures: petPictureUrl,  // Use the provided image URL
+    petPictures: '',  // Placeholder for the image URL
     petAge: parsedPetAge,
     petBreed,
     petDescription,
@@ -85,6 +91,16 @@ exports.createPetProfile = async (req, res) => {
 
   try {
     // Save the new pet profile to the database
+    await newPetProfile.save();
+
+    // Rename and move the uploaded file to include the petId
+    const newFileName = `${newPetProfile.petId}${path.extname(tempFileName)}`;
+    const oldFilePath = path.join(__dirname, '..', 'uploads', 'pets', tempFileName);
+    const newFilePath = path.join(__dirname, '..', 'uploads', 'pets', newFileName);
+    fs.renameSync(oldFilePath, newFilePath);
+
+    // Update the pet profile with the new file name
+    newPetProfile.petPictures = `${req.protocol}://${req.get('host')}/uploads/pets/${newFileName}`;
     await newPetProfile.save();
 
     // Return success response with the created pet profile
@@ -102,6 +118,7 @@ exports.createPetProfile = async (req, res) => {
     });
   }
 };
+
 
 // Get pet profiles (excluding the logged-in user's pet profiles)
 exports.getPetProfiles = async (req, res) => {
@@ -133,15 +150,31 @@ exports.getPetProfiles = async (req, res) => {
 
 // Delete a pet profile
 exports.deletePetProfile = async (req, res) => {
-  const { profileId } = req.params;
+  const { petId } = req.params;
+
+  if (!petId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Pet ID is required',
+    });
+  }
 
   try {
-    const petProfile = await PetProfile.destroy({ where: { ownerId: profileId, ownerId: req.user.userId } });
+    const petProfile = await PetProfile.findOne({ where: { petId, ownerId: req.user.userId } });
     if (!petProfile) {
       return res.status(404).json({
         success: false,
         message: 'Pet profile not found or you are not authorized to delete it',
       });
+    }
+
+    // Delete the pet profile
+    await PetProfile.destroy({ where: { petId, ownerId: req.user.userId } });
+
+    // Delete the associated photo
+    const photoPath = path.join(__dirname, '..', 'uploads', 'pets', path.basename(petProfile.petPictures));
+    if (fs.existsSync(photoPath)) {
+      fs.unlinkSync(photoPath);
     }
 
     res.status(200).json({

@@ -1,9 +1,10 @@
 const { Op } = require('sequelize');
 const Relationship = require('../models/Relationship');
+const User = require('../models/User');
 
 // 1. Send Friend Request
 exports.sendFriendRequest = async (req, res) => {
-  const { receiverId } = req.body;
+  const { receiverId} = req.body;
   const senderId = req.user.userId;
 
   try {
@@ -11,7 +12,7 @@ exports.sendFriendRequest = async (req, res) => {
       where: {
         [Op.or]: [
           { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId }
+          { senderId: senderId, receiverId: receiverId }
         ]
       }
     });
@@ -89,41 +90,48 @@ exports.checkRelationshipStatus = async (req, res) => {
   }
 };
 
-// Check Relationship Data
-exports.checkRelationshipData = async (req, res) => {
-  const { receiverId } = req.params;
-  const senderId = req.user.userId;
-
+exports.getFriendList = async (req, res) => {
   try {
-    const relationship = await Relationship.findOne({
+    const userId = req.user.userId;
+
+    const friends = await Relationship.findAll({
       where: {
         [Op.or]: [
-          { senderId, receiverId },
-          { senderId: receiverId, receiverId: senderId }
-        ]
-      }
+          { senderId: userId, status: 'accepted' },
+          { receiverId: userId, status: 'accepted' },
+        ],
+      },
+      include: [
+        { model: User, as: 'sender', attributes: ['userId', 'username', 'profile_pic', 'lastActive'] },
+        { model: User, as: 'receiver', attributes: ['userId', 'username', 'profile_pic', 'lastActive'] },
+      ],
     });
 
-    if (!relationship) {
-      return res.status(404).json({ message: 'No relationship found' });
-    }
+    const activeUsers = new Map(); // This should be populated with the actual active users
 
-    let statusMessage;
-    if (relationship.status === 'pending') {
-      if (relationship.senderId.toString() === senderId) {
-        statusMessage = 'Your friend request is pending.';
-      } else {
-        statusMessage = 'You have a pending friend request. Please accept or reject it.';
-      }
-    } else if (relationship.status === 'accepted') {
-      statusMessage = 'You are friends.';
-    } else if (relationship.status === 'rejected') {
-      statusMessage = 'The friend request was rejected.';
-    }
+    const friendList = friends.map(friend => {
+      const isSender = friend.senderId === userId;
+      const friendUser = isSender ? friend.receiver : friend.sender;
+      const isActive = activeUsers.has(friendUser.userId);
+      return {
+        userId: friendUser.userId,
+        name: friendUser.username,
+        avatar: friendUser.profile_pic,
+        status: isActive ? 'Online' : 'Offline',
+        lastActive: friendUser.lastActive,
+      };
+    });
 
-    res.status(200).json({ relationship, statusMessage });
-  } catch (err) {
-    res.status(500).json({ message: 'Error checking relationship data', error: err.message });
+    res.status(200).json({
+      success: true,
+      friends: friendList,
+    });
+  } catch (error) {
+    console.error('Error fetching friend list:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch friend list',
+    });
   }
 };
 
