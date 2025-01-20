@@ -1,38 +1,37 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const PetProfile = sequelize.define('PetProfile', {
-  user: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+const PetProfile = sequelize.define('petprofile', {
+  ownerId: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   petName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
   petType: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
   petPictures: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
   petAge: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
   petBreed: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
   petDescription: {
     type: DataTypes.STRING,
-    allowNull: false
-  }
+    allowNull: true,
+  },
 }, {
-  tableName: 'pet_profiles',
-  timestamps: false
+  timestamps: true,
 });
 
 module.exports = PetProfile;

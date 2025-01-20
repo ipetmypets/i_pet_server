@@ -5,8 +5,8 @@ const { checkAuth } = require('../middleware/authMiddleware');
 
 router.post('/send', checkAuth, sendFriendRequest);
 router.put('/update', checkAuth, updateFriendRequestStatus);
-router.get('/status/:receiver_id', checkAuth, checkRelationshipStatus);
-router.get('/data/:receiver_id', checkAuth, checkRelationshipData);
+router.get('/status/:receiverId', checkAuth, checkRelationshipStatus);
+router.get('/data/:receiverId', checkAuth, checkRelationshipData);
 router.delete('/remove', checkAuth, removeFriendRequest);
 
 module.exports = router;

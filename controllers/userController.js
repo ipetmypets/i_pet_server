@@ -1,11 +1,12 @@
-const path = require('path');
+
 const User = require('../models/User');
 const upload = require('../middleware/upload');
+const multer = require('multer');
 
 // Get logged-in user's profile
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const user = await User.findByPk(userId, { attributes: { exclude: ['password'] } });
 
     if (!user) {
@@ -16,7 +17,7 @@ const getUserProfile = async (req, res) => {
       username: user.username,
       email: user.email,
       profile_pic: user.profile_pic,
-      location: user.Location, // Include location data
+      location: user.location, // Include location data
     });
   } catch (err) {
     console.error(err);
@@ -29,7 +30,7 @@ const getOwnerProfile = async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    const user = await User.findByPk(userId, { attributes: ['username', 'profile_pic', 'Location'] });
+    const user = await User.findByPk(userId, { attributes: ['username', 'profile_pic', 'location'] });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -39,7 +40,7 @@ const getOwnerProfile = async (req, res) => {
       success: true,
       username: user.username,
       profile_pic: user.profile_pic,
-      location: user.Location,
+      location: user.location,
     });
   } catch (err) {
     console.error(err);
@@ -53,12 +54,22 @@ const getOwnerProfile = async (req, res) => {
 const uploadUserImage = (req, res) => {
   upload.single('profilePic')(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({
+      // Handle specific multer errors
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+          success: false,
+          message: `Multer error: ${err.message}`,
+        });
+      }
+
+      // Handle other unexpected errors
+      return res.status(500).json({
         success: false,
-        message: err.message || 'Error uploading file',
+        message: `Unexpected error: ${err.message || 'Unknown error'}`,
       });
     }
 
+    // Check if the file was uploaded
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -71,7 +82,7 @@ const uploadUserImage = (req, res) => {
     try {
       const [updated] = await User.update(
         { profile_pic: imageUrl },
-        { where: { id: req.user.id } }
+        { where: { userId: req.user.userId } }
       );
 
       if (updated === 0) {
@@ -89,5 +100,6 @@ const uploadUserImage = (req, res) => {
     }
   });
 };
+
 
 module.exports = { getUserProfile, getOwnerProfile, uploadUserImage };

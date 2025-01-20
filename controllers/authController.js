@@ -17,10 +17,10 @@ exports.register = async (req, res) => {
       email,
       profile_pic,
       password: hashedPassword,
-      Location: { longitude, latitude },  // Ensure this is an object with both fields
+     location: longitude && latitude ? { longitude, latitude } : null, // Ensure this is an object with both fields
     });
 
-    const token = jwt.sign({ id: newUser.id, username: newUser.username }, process.env.JWT_SECRET);
+    const token = jwt.sign({ userId: newUser.userId, username: newUser.username }, process.env.JWT_SECRET);
     res.status(201).json({ token });
   } catch (err) {
     console.error('Registration error:', err);
@@ -55,10 +55,10 @@ exports.login = async (req, res) => {
     }
 
     // Generate JWT
-    const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET);
+    const token = jwt.sign({ userId: user.userId, username: user.username }, process.env.JWT_SECRET);
 
     // Respond with the token and user data
-    res.status(200).json({ token, user: { id: user.id, email: user.email } });
+    res.status(200).json({ token, user: { userId: user.userId, email: user.email } });
   } catch (err) {
     console.error('Login error:', err); // Log the error
     res.status(500).json({ message: 'Server error' });

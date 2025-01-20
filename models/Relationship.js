@@ -2,13 +2,13 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 const Relationship = sequelize.define('Relationship', {
-  sender_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+  senderId: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
-  receiver_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+  receiverId: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   status: {
     type: DataTypes.ENUM('pending', 'accepted', 'rejected'),

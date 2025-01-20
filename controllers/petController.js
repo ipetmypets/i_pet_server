@@ -1,24 +1,39 @@
 const PetProfile = require('../models/PetProfile');
 const upload = require('../middleware/upload');
+const { Op } = require('sequelize');
 
 // Upload pet picture and return the URL
 exports.uploadPetPicture = (req, res) => {
+  console.log('Starting file upload'); // Debugging statement
   upload.single('petPicture')(req, res, (err) => {
     if (err) {
-      return res.status(400).json({
+      console.error('Error during file upload:', err); // Debugging statement
+      // Handle specific multer errors
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+          success: false,
+          message: `Multer error: ${err.message}`,
+        });
+      }
+
+      // Handle other unexpected errors
+      return res.status(500).json({
         success: false,
-        message: err.message || 'Error uploading file',
+        message: `Unexpected error: ${err.message || 'Unknown error'}`,
       });
     }
 
+    // Check if the file was uploaded
     if (!req.file) {
+      console.log('No file uploaded'); // Debugging statement
       return res.status(400).json({
         success: false,
-        message: 'No picture path provided',
+        message: 'No file uploaded',
       });
     }
 
     const petPictureUrl = `${req.protocol}://${req.get('host')}/uploads/pets/${req.file.filename}`;
+    console.log('File uploaded successfully:', petPictureUrl); // Debugging statement
 
     res.status(200).json({
       success: true,
@@ -26,7 +41,6 @@ exports.uploadPetPicture = (req, res) => {
     });
   });
 };
-
 
 // Create a new pet profile
 exports.createPetProfile = async (req, res) => {
@@ -50,7 +64,7 @@ exports.createPetProfile = async (req, res) => {
   }
 
   // Check if the user already has 5 pet profiles
-  const profileCount = await PetProfile.count({ where: { user: req.user.id } });
+  const profileCount = await PetProfile.count({ where: { ownerId: req.user.userId } });
   if (profileCount >= 5) {
     return res.status(400).json({
       success: false,
@@ -60,7 +74,7 @@ exports.createPetProfile = async (req, res) => {
 
   // Create a new PetProfile object
   const newPetProfile = new PetProfile({
-    user: req.user.id,
+    ownerId: req.user.userId,
     petName,
     petType,
     petPictures: petPictureUrl,  // Use the provided image URL
@@ -97,10 +111,10 @@ exports.getPetProfiles = async (req, res) => {
 
     if (type === 'own') {
       // Fetch pet profiles that belong to the logged-in user
-      petProfiles = await PetProfile.findAll({ where: { user: req.user.id } });
+      petProfiles = await PetProfile.findAll({ where: { ownerId: req.user.userId } });
     } else {
       // Fetch pet profiles that do not belong to the logged-in user
-      petProfiles = await PetProfile.findAll({ where: { user: { [Op.ne]: req.user.id } } });
+      petProfiles = await PetProfile.findAll({ where: { ownerId: { [Op.ne]: req.user.userId } } });
     }
 
     res.status(200).json({
@@ -108,6 +122,7 @@ exports.getPetProfiles = async (req, res) => {
       petProfiles,
     });
   } catch (error) {
+    console.error('Error fetching pet profiles:', error); // Log the error for debugging
     res.status(500).json({
       success: false,
       message: 'Failed to fetch pet profiles',
@@ -121,11 +136,11 @@ exports.deletePetProfile = async (req, res) => {
   const { profileId } = req.params;
 
   try {
-    const petProfile = await PetProfile.destroy({ where: { id: profileId, user: req.user.id } });
+    const petProfile = await PetProfile.destroy({ where: { ownerId: profileId, ownerId: req.user.userId } });
     if (!petProfile) {
       return res.status(404).json({
         success: false,
-        message: 'Pet profile not found or you do not have permission to delete it',
+        message: 'Pet profile not found or you are not authorized to delete it',
       });
     }
 

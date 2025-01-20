@@ -3,15 +3,15 @@ const Relationship = require('../models/Relationship');
 
 // 1. Send Friend Request
 exports.sendFriendRequest = async (req, res) => {
-  const { receiver_id } = req.body;
-  const sender_id = req.user.id;
+  const { receiverId } = req.body;
+  const senderId = req.user.userId;
 
   try {
     const existingRequest = await Relationship.findOne({
       where: {
         [Op.or]: [
-          { sender_id, receiver_id },
-          { sender_id: receiver_id, receiver_id: sender_id }
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId }
         ]
       }
     });
@@ -21,8 +21,8 @@ exports.sendFriendRequest = async (req, res) => {
     }
 
     const newRequest = await Relationship.create({
-      sender_id,
-      receiver_id,
+      senderId,
+      receiverId,
       status: 'pending'
     });
 
@@ -34,8 +34,8 @@ exports.sendFriendRequest = async (req, res) => {
 
 // 2. Accept or Reject Friend Request
 exports.updateFriendRequestStatus = async (req, res) => {
-  const { sender_id, status } = req.body;
-  const receiver_id = req.user.id;
+  const { senderId, status } = req.body;
+  const receiverId = req.user.userId;
 
   if (!['accepted', 'rejected'].includes(status)) {
     return res.status(400).json({ message: 'Invalid status. Must be either "accepted" or "rejected"' });
@@ -44,8 +44,8 @@ exports.updateFriendRequestStatus = async (req, res) => {
   try {
     const relationship = await Relationship.findOne({
       where: {
-        sender_id,
-        receiver_id,
+        senderId,
+        receiverId,
         status: 'pending'
       }
     });
@@ -66,15 +66,15 @@ exports.updateFriendRequestStatus = async (req, res) => {
 
 // Check Relationship Status
 exports.checkRelationshipStatus = async (req, res) => {
-  const { receiver_id } = req.params;
-  const sender_id = req.user.id;
+  const { receiverId } = req.params;
+  const senderId = req.user.userId;
 
   try {
     const relationship = await Relationship.findOne({
       where: {
         [Op.or]: [
-          { sender_id, receiver_id },
-          { sender_id: receiver_id, receiver_id: sender_id }
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId }
         ]
       }
     });
@@ -91,15 +91,15 @@ exports.checkRelationshipStatus = async (req, res) => {
 
 // Check Relationship Data
 exports.checkRelationshipData = async (req, res) => {
-  const { receiver_id } = req.params;
-  const sender_id = req.user.id;
+  const { receiverId } = req.params;
+  const senderId = req.user.userId;
 
   try {
     const relationship = await Relationship.findOne({
       where: {
         [Op.or]: [
-          { sender_id, receiver_id },
-          { sender_id: receiver_id, receiver_id: sender_id }
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId }
         ]
       }
     });
@@ -110,7 +110,7 @@ exports.checkRelationshipData = async (req, res) => {
 
     let statusMessage;
     if (relationship.status === 'pending') {
-      if (relationship.sender_id.toString() === sender_id) {
+      if (relationship.senderId.toString() === senderId) {
         statusMessage = 'Your friend request is pending.';
       } else {
         statusMessage = 'You have a pending friend request. Please accept or reject it.';
@@ -129,14 +129,14 @@ exports.checkRelationshipData = async (req, res) => {
 
 // 4. Remove Friend Request
 exports.removeFriendRequest = async (req, res) => {
-  const { receiver_id } = req.body;
-  const sender_id = req.user.id;
+  const { receiverId } = req.body;
+  const senderId = req.user.userId;
 
   try {
     const relationship = await Relationship.destroy({
       where: {
-        sender_id,
-        receiver_id,
+        senderId,
+        receiverId,
         status: 'pending'
       }
     });
