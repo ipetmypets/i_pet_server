@@ -1,38 +1,53 @@
 const Chat = require('../models/Chat');
-const Relationship = require('../models/Relationship');
+const Message = require('../models/Message');
 const User = require('../models/User');
 
-// Send a message
-exports.sendMessage = async (req, res) => {
-  const { receiverId, message } = req.body;
+// Create a new chat
+exports.createChat = async (req, res) => {
+  const { chatName, participantIds } = req.body;
 
   try {
-    // Check if the relationship is accepted
-    const relationship = await Relationship.findOne({
-      where: {
-        senderId: req.user.userId,
-        receiverId,
-        status: 'accepted',
-      },
-    });
+    const newChat = await Chat.create({ chatName });
 
-    if (!relationship) {
-      return res.status(403).json({
-        success: false,
-        message: 'You can only chat with users you have an accepted relationship with.',
-      });
+    if (participantIds && participantIds.length > 0) {
+      const participants = await User.findAll({ where: { userId: participantIds } });
+      await newChat.addParticipants(participants);
     }
 
-    const chat = await Chat.create({
-      senderId: req.user.userId,
-      receiverId,
-      message,
+    res.status(201).json({
+      success: true,
+      message: 'Chat created successfully',
+      chat: newChat,
     });
+  } catch (error) {
+    console.error('Error creating chat:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create chat',
+      error: error.message,
+    });
+  }
+};
+
+// Send a message in a chat
+exports.sendMessage = async (req, res) => {
+  const { chatId, content } = req.body;
+  const userId = req.user.userId;
+
+  try {
+    const newMessage = await Message.create({
+      chatId,
+      userId,
+      content,
+    });
+
+    // Emit the new message to all participants in the chat
+    req.io.to(`chat_${chatId}`).emit('newMessage', newMessage);
 
     res.status(201).json({
       success: true,
       message: 'Message sent successfully',
-      chat,
+      message: newMessage,
     });
   } catch (error) {
     console.error('Error sending message:', error);
@@ -44,34 +59,16 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// Fetch messages between two users
+// Get messages in a chat
 exports.getMessages = async (req, res) => {
-  const { userId } = req.params;
+  const { chatId } = req.params;
 
   try {
-    // Check if the relationship is accepted
-    const relationship = await Relationship.findOne({
-      where: {
-        senderId: req.user.userId,
-        receiverId: userId,
-        status: 'accepted',
-      },
-    });
-
-    if (!relationship) {
-      return res.status(403).json({
-        success: false,
-        message: 'You can only chat with users you have an accepted relationship with.',
-      });
-    }
-
-    const messages = await Chat.findAll({
-      where: {
-        [Op.or]: [
-          { senderId: req.user.userId, receiverId: userId },
-          { senderId: userId, receiverId: req.user.userId },
-        ],
-      },
+    const messages = await Message.findAll({
+      where: { chatId },
+      include: [
+        { model: User, as: 'sender', attributes: ['userId', 'username', 'profile_pic'] },
+      ],
       order: [['createdAt', 'ASC']],
     });
 

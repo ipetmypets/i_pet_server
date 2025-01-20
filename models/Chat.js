@@ -4,39 +4,21 @@ const User = require('./User');
 
 const Chat = sequelize.define('Chat', {
   chatId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
+    type: DataTypes.INTEGER,
     primaryKey: true,
-    defaultValue: () => `CHT${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`, // Generate unique chatID on creation
+    autoIncrement: true,
   },
-  senderId: {
+  chatName: {
     type: DataTypes.STRING,
-    allowNull: false,
-    references: {
-      model: User,
-      key: 'userId',
-    },
-  },
-  receiverId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    references: {
-      model: User,
-      key: 'userId',
-    },
-  },
-  message: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+    allowNull: true,
   },
 }, {
   tableName: 'chats',
-  timestamps: false,
+  timestamps: true,
 });
+
+// Define associations
+Chat.belongsToMany(User, { through: 'UserChats', as: 'participants', foreignKey: 'chatId' });
+User.belongsToMany(Chat, { through: 'UserChats', as: 'chats', foreignKey: 'userId' });
 
 module.exports = Chat;

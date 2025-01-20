@@ -39,37 +39,24 @@ app.get('/api', (req, res) => {
     res.json({ message: "Welcome to the iPetMyPets API!" });
 });
 
-// Socket.io setup
-const activeUsers = new Map();
-
+// Socket.IO connection
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  socket.on('user_connected', (userId) => {
-    activeUsers.set(userId, socket.id);
-    io.emit('active_users', Array.from(activeUsers.keys()));
+  socket.on('joinChat', (chatId) => {
+    socket.join(`chat_${chatId}`);
+    console.log(`User joined chat ${chatId}`);
   });
 
-  socket.on('send_message', async ({ senderId, receiverId, message }) => {
-    const chat = await Chat.create({ senderId, receiverId, message });
-    const receiverSocketId = activeUsers.get(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('receive_message', chat);
-    }
+  socket.on('leaveChat', (chatId) => {
+    socket.leave(`chat_${chatId}`);
+    console.log(`User left chat ${chatId}`);
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-    for (let [userId, socketId] of activeUsers.entries()) {
-      if (socketId === socket.id) {
-        activeUsers.delete(userId);
-        break;
-      }
-    }
-    io.emit('active_users', Array.from(activeUsers.keys()));
   });
 });
-
 // Start server
 const PORT = process.env.PORT || 5002;
 server.listen(PORT, () => {
