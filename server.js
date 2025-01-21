@@ -15,7 +15,12 @@ const Message = require('./models/Message'); // Import Message model
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: '*', // Allow all origins for simplicity, adjust as needed
+    methods: ['GET', 'POST'],
+  },
+});
 
 // Middleware
 app.use(cors());
@@ -35,7 +40,7 @@ app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/pet', petRoutes);
 app.use('/relationship', relationshipRoutes);
-app.use('/chat', chatRoutes); // Register chat routes
+app.use('/chat', chatRoutes(io)); // Register chat routes with io
 
 app.get('/api', (req, res) => {
     res.json({ message: "Welcome to the iPetMyPets API!" });

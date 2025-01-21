@@ -1,9 +1,14 @@
 const express = require('express');
-const {sendMessage , getMessages} = require('../controllers/chatController');
+const chatController = require('../controllers/chatController');
 const { checkAuth } = require('../middleware/authMiddleware');
+const socketMiddleware = require('../middleware/socketMiddleware');
 const router = express.Router();
 
-router.post('/sendMessage',checkAuth,sendMessage);
-router.get('/getMessages/:chatId',checkAuth,getMessages);
+module.exports = (io) => {
+  router.use(socketMiddleware(io)); // Attach io to req
 
-module.exports = router;
+  router.post('/sendMessage', checkAuth, chatController.sendMessage);
+  router.get('/getMessages/:chatId', checkAuth, chatController.getMessages);
+
+  return router;
+};

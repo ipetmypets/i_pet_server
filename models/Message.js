@@ -15,7 +15,7 @@ const Message = sequelize.define('Message', {
   },
   userId: {
     type: DataTypes.STRING,
-    allowNull: true, // Allow NULL values
+    allowNull: false,
   },
   chatId: {
     type: DataTypes.INTEGER,
